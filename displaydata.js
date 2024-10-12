@@ -281,26 +281,34 @@ app.post('/submit-offer', async (req, res) => {
     const { taskId, deadline, pitch } = req.body;
     const user = req.session.user; // Get user from session
 
+    // Check if the user is logged in
     if (!user || !user._id) {
         return res.status(401).json({ success: false, message: 'User not logged in.' });
     }
 
+    // Validate input fields
+    if (!taskId || !deadline || !pitch) {
+        return res.status(400).json({ success: false, message: 'All fields are required.' });
+    }
+
     try {
-        // Insert the offer into the database with the taskId, userId, and username
+        // Convert taskId to ObjectId and insert the offer into the database
         await offersCollection.insertOne({
-            taskId: new ObjectId(taskId), 
-            userId: new ObjectId(user._id), // Store user's ID
-            username: user.username,
-            deadline,
-            pitch
+            taskId: new ObjectId(taskId), // Ensure taskId is correctly formatted
+            userId: new ObjectId(user._id), // Store user's ID from session
+            username: user.username,        // Store username from session
+            deadline,                       // Deadline for the offer
+            pitch                           // Pitch submitted by the user
         });
-        res.status(201).json({ message: 'Offer submitted successfully.' });
+
+        // Successfully inserted offer
+        res.status(201).json({ success: true, message: 'Offer submitted successfully.' });
     } catch (error) {
         console.error('Error submitting offer:', error);
-        res.status(500).json({ message: 'Internal server error.' });
+        // Internal server error
+        res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 });
-
 
 // API to add a new task with user's specific ID
 app.post('/add-task', async (req, res) => {
