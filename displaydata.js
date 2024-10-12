@@ -289,15 +289,11 @@ app.get('/role-selection', (req, res) => {
 // API to submit an offer
 // API to submit an offer
 app.post('/submit-offer', async (req, res) => {
-    const { taskId,username, deadline, pitch } = req.body;
-
-
-    
+    const { taskId,username, deadline, pitch } = req.body; 
 
     try {
         await offersCollection.insertOne({
-            taskId: new ObjectId(taskId), 
-            userId: new ObjectId(user._id), // Store user's ID
+            taskId: new ObjectId(taskId),
             username,
             deadline,
             pitch
