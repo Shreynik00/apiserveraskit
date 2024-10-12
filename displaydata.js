@@ -288,13 +288,7 @@ app.get('/role-selection', (req, res) => {
 
 // API to submit an offer
 app.post('/submit-offer', async (req, res) => {
-    const { taskId,name, deadline, pitch } = req.body;
-    const user = req.session.user; // Get user from session
-
-    // Check if the user is logged in
-    if (!user || !user._id) {
-        return res.status(401).json({ success: false, message: 'User not logged in.' });
-    }
+    const { taskId,name,username, deadline, pitch } = req.body;
 
     // Validate input fields
     if (!taskId || !deadline || !pitch) {
@@ -306,7 +300,7 @@ app.post('/submit-offer', async (req, res) => {
         await offersCollection.insertOne({
             taskId: new ObjectId(taskId), // Ensure taskId is correctly formatted
             name,
-            username: user.username,        // Store username from session
+            username,        // Store username from session
             deadline,                       // Deadline for the offer
             pitch                           // Pitch submitted by the user
         });
