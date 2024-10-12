@@ -288,18 +288,11 @@ app.get('/role-selection', (req, res) => {
 
 // API to submit an offer
 app.post('/submit-offer', async (req, res) => {
-    const { taskId, name, deadline, pitch } = req.body;
+    const { taskId,username, name, deadline, pitch } = req.body;
 
     // Validate input fields
     if (!taskId || !deadline || !pitch) {
         return res.status(400).json({ success: false, message: 'All fields are required.' });
-    }
-
-    // Get username from the session instead of the request body
-    const username = req.session.username;  // Assuming you're using sessions for user authentication
-
-    if (!username) {
-        return res.status(401).json({ success: false, message: 'User not logged in.' });
     }
 
     try {
