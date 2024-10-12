@@ -302,24 +302,18 @@ app.post('/submit-offer', async (req, res) => {
 
 // API to add a new task with user's specific ID
 app.post('/add-task', async (req, res) => {
-    const { title, detail, deadline, mode, type, budget } = req.body;  // Added "budget" to match the form fields
-
-    // Get the user's username from the session
-    const user = req.session.user;
-
-    // If the user is not logged in, return an error
-   
+    const { title, detail, deadline, mode, type, budget, username } = req.body;  // Extract username from the request body
 
     try {
-        // Insert task with username and other details (removing userId)
+        // Insert task with the provided username and other details
         const result = await collection.insertOne({
             title,
             detail,
-            deadline,  // Store deadline of the task
+            deadline,  // Store the deadline of the task
             mode,
             type,
-            budget,   // Store the budget value
-            username: user.username  // Store only the username
+            budget,    // Store the budget value
+            username   // Store the username from the request body
         });
 
         // Send a successful response with the task ID
@@ -329,6 +323,7 @@ app.post('/add-task', async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to add task' });
     }
 });
+
 
 
 // Start the server
