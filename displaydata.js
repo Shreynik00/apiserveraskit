@@ -288,7 +288,7 @@ app.get('/role-selection', (req, res) => {
 
 // API to submit an offer
 app.post('/submit-offer', async (req, res) => {
-    const { taskId, username, name, deadline, pitch } = req.body;
+    const { taskId, username, Name, deadline, pitch } = req.body;
 
     // Validate input fields
     if (!taskId || !username || !name || !deadline || !pitch) {
