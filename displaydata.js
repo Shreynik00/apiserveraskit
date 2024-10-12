@@ -289,18 +289,16 @@ app.get('/role-selection', (req, res) => {
 // API to submit an offer
 // API to submit an offer
 app.post('/submit-offer', async (req, res) => {
-    const { taskId, deadline, pitch } = req.body;
-    const user = req.session.user; // Get user from session
+    const { taskId,username, deadline, pitch } = req.body;
 
-    if (!user || !user._id) {
-        return res.status(401).json({ success: false, message: 'User not logged in.' });
-    }
+
+    
 
     try {
         await offersCollection.insertOne({
             taskId: new ObjectId(taskId), 
             userId: new ObjectId(user._id), // Store user's ID
-            username: user.username,
+            username,
             deadline,
             pitch
         });
