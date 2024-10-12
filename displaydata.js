@@ -288,10 +288,10 @@ app.get('/role-selection', (req, res) => {
 
 // API to submit an offer
 app.post('/submit-offer', async (req, res) => {
-    const { taskId,username, name, deadline, pitch } = req.body;
+    const { taskId, username, name, deadline, pitch } = req.body;
 
     // Validate input fields
-    if (!taskId || !deadline || !pitch) {
+    if (!taskId || !username || !name || !deadline || !pitch) {
         return res.status(400).json({ success: false, message: 'All fields are required.' });
     }
 
@@ -300,7 +300,7 @@ app.post('/submit-offer', async (req, res) => {
         await offersCollection.insertOne({
             taskId: new ObjectId(taskId),  // Ensure taskId is correctly formatted
             name,
-            username,                      // Store username from session
+            username,                      // Store username passed in the request
             deadline,                      // Deadline for the offer
             pitch                          // Pitch submitted by the user
         });
@@ -312,7 +312,6 @@ app.post('/submit-offer', async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 });
-
 
 
 // API to add a new task with user's specific ID
