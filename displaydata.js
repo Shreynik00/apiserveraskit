@@ -304,16 +304,16 @@ app.post('/submit-offer', async (req, res) => {
 app.post('/add-task', async (req, res) => {
     const { title, detail, deadline, mode, type, budget } = req.body;  // Added "budget" to match the form fields
 
-    // Get the user's ID and username from the session
+    // Get the user's username from the session
     const user = req.session.user;
 
     // If the user is not logged in, return an error
-    if (!user || !user._id) {
+    if (!user || !user.username) {
         return res.status(401).json({ success: false, message: 'User not logged in.' });
     }
 
     try {
-        // Insert task with user ID, budget, and other details
+        // Insert task with username and other details (removing userId)
         const result = await collection.insertOne({
             title,
             detail,
@@ -321,8 +321,7 @@ app.post('/add-task', async (req, res) => {
             mode,
             type,
             budget,   // Store the budget value
-            userId: new ObjectId(user._id),  // Store user's ID
-            username: user.username  // Optionally store the username too
+            username: user.username  // Store only the username
         });
 
         // Send a successful response with the task ID
@@ -332,6 +331,7 @@ app.post('/add-task', async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to add task' });
     }
 });
+
 
 // Start the server
 app.listen(port, () => {
