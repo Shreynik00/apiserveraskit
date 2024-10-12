@@ -308,9 +308,7 @@ app.post('/add-task', async (req, res) => {
     const user = req.session.user;
 
     // If the user is not logged in, return an error
-    if (!user || !user.username) {
-        return res.status(401).json({ success: false, message: 'User not logged in.' });
-    }
+   
 
     try {
         // Insert task with username and other details (removing userId)
