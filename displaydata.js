@@ -288,31 +288,38 @@ app.get('/role-selection', (req, res) => {
 
 // API to submit an offer
 app.post('/submit-offer', async (req, res) => {
-    const { taskId,name,username, deadline, pitch } = req.body;
+    const { taskId, name, deadline, pitch } = req.body;
 
     // Validate input fields
     if (!taskId || !deadline || !pitch) {
         return res.status(400).json({ success: false, message: 'All fields are required.' });
     }
 
+    // Get username from the session instead of the request body
+    const username = req.session.username;  // Assuming you're using sessions for user authentication
+
+    if (!username) {
+        return res.status(401).json({ success: false, message: 'User not logged in.' });
+    }
+
     try {
         // Convert taskId to ObjectId and insert the offer into the database
         await offersCollection.insertOne({
-            taskId: new ObjectId(taskId), // Ensure taskId is correctly formatted
+            taskId: new ObjectId(taskId),  // Ensure taskId is correctly formatted
             name,
-            username,        // Store username from session
-            deadline,                       // Deadline for the offer
-            pitch                           // Pitch submitted by the user
+            username,                      // Store username from session
+            deadline,                      // Deadline for the offer
+            pitch                          // Pitch submitted by the user
         });
 
         // Successfully inserted offer
         res.status(201).json({ success: true, message: 'Offer submitted successfully.' });
     } catch (error) {
         console.error('Error submitting offer:', error);
-        // Internal server error
         res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 });
+
 
 
 // API to add a new task with user's specific ID
