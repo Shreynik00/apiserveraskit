@@ -286,6 +286,7 @@ app.post('/submit-offer', async (req, res) => {
     }
 
     try {
+        // Insert the offer into the database with the taskId, userId, and username
         await offersCollection.insertOne({
             taskId: new ObjectId(taskId), 
             userId: new ObjectId(user._id), // Store user's ID
@@ -299,6 +300,7 @@ app.post('/submit-offer', async (req, res) => {
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
+
 
 // API to add a new task with user's specific ID
 app.post('/add-task', async (req, res) => {
