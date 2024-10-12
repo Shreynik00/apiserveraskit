@@ -11,7 +11,7 @@ const port = 3000;
 
 
 // Connection URI for MongoDB
-const uri = 'process.env.MONGODB_URI';
+const uri = 'mongodb+srv://Shreynik:Dinku2005@cluster0.xh7s8.mongodb.net/';
 const client = new MongoClient(uri);
 let collection, usersCollection, offersCollection, messagesCollection;
 
