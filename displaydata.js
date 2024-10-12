@@ -76,19 +76,21 @@ app.get('/current-username', (req, res) => {
 });
 
 // API to fetch task details by ID
-app.get('/task/:id', async (req, res) => {
-    const taskId = req.params.id; 
+// API to fetch all tasks for a specific username
+app.get('/tasks/:username', async (req, res) => {
+    const username = req.params.username; 
     try {
-        const task = await collection.findOne({ _id: new ObjectId(taskId) });
-        if (!task) {
-            return res.status(404).json({ message: 'Task not found.' });
+        const tasks = await collection.find({ username: username }).toArray(); // Query for all tasks by username
+        if (tasks.length === 0) {
+            return res.status(404).json({ message: 'No tasks found for this user.' });
         }
-        res.json(task);
+        res.json(tasks);
     } catch (error) {
-        console.error('Error fetching task details:', error);
+        console.error('Error fetching tasks:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
+
 
 // API to fetch offers for a specific task
 app.get('/offers/:taskId', async (req, res) => {
