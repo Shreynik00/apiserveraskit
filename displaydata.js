@@ -66,6 +66,16 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Usersetup.html'));
 });
 
+app.get('/current-username', (req, res) => {
+    const user = req.session.user;
+    
+    if (!user || !user.username) {
+        return res.status(401).json({ message: 'User not logged in.' });
+    }
+    
+    res.status(200).json({ username: user.username });
+});
+
 // API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
     if (req.session.user && req.session.user.username) {
