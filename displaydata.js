@@ -152,10 +152,11 @@ app.post('/login', async (req, res) => {
 });
 
 // API to fetch user details
-app.get('/user/:userId', async (req, res) => {
-    const { userId } = req.params;
+// API to fetch user details by username
+app.get('/user/:username', async (req, res) => {
+    const { username } = req.params;
     try {
-        const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+        const user = await usersCollection.findOne({ username: username });
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
@@ -165,6 +166,7 @@ app.get('/user/:userId', async (req, res) => {
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
+
 
 // API to fetch tasks
 app.get('/tasks', async (req, res) => {
