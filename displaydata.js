@@ -289,7 +289,7 @@ app.get('/role-selection', (req, res) => {
 
 // API to submit an offer
 app.post('/submit-offer', async (req, res) => {
-    const { taskId, deadline, pitch } = req.body;
+    const { taskId, deadline, pitch, username } = req.body; // Extract username from the request body
     const user = req.session.user; // Get user from session
 
     if (!user) {
@@ -299,8 +299,7 @@ app.post('/submit-offer', async (req, res) => {
     try {
         await offersCollection.insertOne({
             taskId: new ObjectId(taskId), 
-           
-            username: user.username,
+            username, // Store the username directly
             deadline,
             pitch
         });
