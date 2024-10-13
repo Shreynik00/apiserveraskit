@@ -289,28 +289,25 @@ app.get('/role-selection', (req, res) => {
 
 // API to submit an offer
 app.post('/submit-offer', async (req, res) => {
-    const { taskId, username, name, deadline, pitch } = req.body;
+    const { taskId, deadline, pitch } = req.body;
+    const user = req.session.user; // Get user from session
 
-    // Validate input fields
-    if (!taskId || !username || !name || !deadline || !pitch) {
-        return res.status(400).json({ success: false, message: 'All fields are required.' });
+    if (!user) {
+        return res.status(401).json({ success: false, message: 'User not logged in.' });
     }
 
     try {
-        // Convert taskId to ObjectId and insert the offer into the database
         await offersCollection.insertOne({
-            taskId: new ObjectId(taskId),  // Ensure taskId is correctly formatted
-            name,
-            username,                      // Store username passed in the request
-            deadline,                      // Deadline for the offer
-            pitch                          // Pitch submitted by the user
+            taskId: new ObjectId(taskId), 
+           
+            username: user.username,
+            deadline,
+            pitch
         });
-
-        // Successfully inserted offer
-        res.status(201).json({ success: true, message: 'Offer submitted successfully.' });
+        res.status(201).json({ message: 'Offer submitted successfully.' });
     } catch (error) {
         console.error('Error submitting offer:', error);
-        res.status(500).json({ success: false, message: 'Internal server error.' });
+        res.status(500).json({ message: 'Internal server error.' });
     }
 });
 
