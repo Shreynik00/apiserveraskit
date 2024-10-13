@@ -27,6 +27,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow specific HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
     credentials: true  // Allow credentials if needed
+    
 }));
 
 // Handle preflight requests
@@ -288,7 +289,7 @@ app.get('/role-selection', (req, res) => {
 
 // API to submit an offer
 app.post('/submit-offer', async (req, res) => {
-    const { taskId, username, Name, deadline, pitch } = req.body;
+    const { taskId, username, name, deadline, pitch } = req.body;
 
     // Validate input fields
     if (!taskId || !username || !name || !deadline || !pitch) {
