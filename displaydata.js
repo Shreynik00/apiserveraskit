@@ -258,7 +258,7 @@ const {username} = req.params;
 
     try {
         // Fetch tasks where the username matches the logged-in user's username
-        const tasks = await collection.find({ username }).toArray();
+        const tasks = await collection.find({ username:username }).toArray();
         res.json(tasks);
     } catch (error) {
         console.error('Error fetching receiver tasks:', error);
