@@ -88,16 +88,19 @@ app.get('/current-username', (req, res) => {
 
 // API to fetch task details by ID
 // API to fetch all tasks for a specific username
-app.get('/tasks/:username', async (req, res) => {
-    const username = req.params.username; 
+// Fetch task details by ID
+app.get('/tasks/:id', async (req, res) => {
+    const taskId = req.params.id; 
     try {
-        const tasks = await collection.find({ username: username }).toArray(); // Query for all tasks by username
-        if (tasks.length === 0) {
-            return res.status(404).json({ message: 'No tasks found for this user.' });
+        // Assuming `collection` is your MongoDB collection
+        const task = await collection.findOne({ _id: new ObjectId(taskId) }); // Use ObjectId for MongoDB
+
+        if (!task) {
+            return res.status(404).json({ message: 'Task not found.' });
         }
-        res.json(tasks);
+        res.json(task);
     } catch (error) {
-        console.error('Error fetching tasks:', error);
+        console.error('Error fetching task:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
