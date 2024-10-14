@@ -256,11 +256,11 @@ app.get('/messages', async (req, res) => {
 app.get('/tasks/:username', async (req, res) => {
     const username = req.params.username; 
     try {
-        const tasks = await collection.find({ username: username }).toArray(); // Query for all tasks by username
-        if (tasks.length === 0) {
+        const task = await collection.find({ username: username }).toArray(); // Query for all tasks by username
+        if (task.length === 0) {
             return res.status(404).json({ message: 'No tasks found for this user.' });
         }
-        res.json(tasks);
+        res.json(task);
     } catch (error) {
         console.error('Error fetching tasks:', error);
         res.status(500).json({ message: 'Internal server error.' });
