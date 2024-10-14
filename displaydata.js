@@ -16,7 +16,7 @@ const client = new MongoClient(uri);
 let collection, usersCollection, offersCollection, messagesCollection;
 
 // Middleware to parse JSON requests
-app.use(cors());
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -70,16 +70,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Usersetup.html'));
 });
 
-app.get('/current-username', (req, res) => {
-    const user = req.session.user;
-    
-    if (!user || !user.username) {
-        return res.status(401).json({ message: 'User not logged in.' });
-    }
-    
-    res.status(200).json({ username: user.username });
-});
-
+// API to fetch current logged-in username from session
 // API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
     if (req.session.user && req.session.user.username) {
@@ -88,6 +79,7 @@ app.get('/current-username', (req, res) => {
         res.status(401).json({ message: 'User not logged in.' });
     }
 });
+
 
 // Fetch task details by ID
 app.get('/tasks/:id', async (req, res) => {
@@ -256,15 +248,17 @@ app.get('/messages', async (req, res) => {
 
 // API to fetch tasks for service receiver (only tasks posted by the logged-in user)
 // API to fetch all tasks for the current logged-in user
-
 app.get('/reciverIndex/tasks', async (req, res) => {
-    const user = req.session.user; // Get user from session
+    const user = req.session.user;
+    
+    // Log session object for debugging
+    console.log('Session:', req.session);
+
     if (!user || !user.username) {
         return res.status(401).json({ message: 'User not logged in.' });
     }
 
     try {
-        // Fetch tasks where the username matches the logged-in user's username
         const tasks = await collection.find({ username: user.username }).toArray();
         res.json(tasks);
     } catch (error) {
