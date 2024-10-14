@@ -253,26 +253,22 @@ app.get('/messages', async (req, res) => {
 
 // API to fetch tasks for service receiver (only tasks posted by the logged-in user)
 // API to fetch all tasks for the current logged-in user
-app.get('/task/:username', async (req, res) => {
-     const { usernames } = req.params;
+app.get('/reciverIndex/tasks', async (req, res) => {
+    const user = req.session.user; // Get user from session
+    if (!user || !user.username) {
+        return res.status(401).json({ message: 'User not logged in.' });
+    }
 
     try {
-        // Query for all tasks associated with the current logged-in user's username
-        const tasks = await collection.find({ username: usernames }).toArray();
-
-        // Check if tasks exist for the current user
-        if (tasks.length === 0) {
-            return res.status(404).json({ message: 'No tasks found for this user.' });
-        }
-
-        // Return the tasks in the response
+        // Fetch tasks where the username matches the logged-in user's username
+        const tasks = await collection.find({ username: user.username }).toArray();
         res.json(tasks);
     } catch (error) {
-        // Log error if something goes wrong with fetching the tasks
-        console.error('Error fetching tasks:', error);
+        console.error('Error fetching receiver tasks:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
+
 
 
 
