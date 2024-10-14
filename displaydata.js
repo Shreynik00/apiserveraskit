@@ -35,12 +35,15 @@ app.options('*', cors());
 
 
 // Session configuration
+
+
 app.use(session({
-    secret: 'your-secret-key',
+    secret: 'your-secret-key', // Replace with a secure secret
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } // Set to true if using HTTPS
+    saveUninitialized: false,
+    cookie: { secure: false, httpOnly: true } // Ensure secure cookies if using HTTPS
 }));
+
 
 // Connect to MongoDB once at the start
 async function connectDB() {
@@ -253,12 +256,16 @@ app.get('/messages', async (req, res) => {
 
 // API to fetch tasks for service receiver (only tasks posted by the logged-in user)
 // API to fetch all tasks for the current logged-in user
-app.get('/reciverIndex/tasks/:username', async (req, res) => {
-const {username} = req.params;
+
+app.get('/reciverIndex/tasks', async (req, res) => {
+    const user = req.session.user; // Get user from session
+    if (!user || !user.username) {
+        return res.status(401).json({ message: 'User not logged in.' });
+    }
 
     try {
         // Fetch tasks where the username matches the logged-in user's username
-        const tasks = await collection.find({ username:username }).toArray();
+        const tasks = await collection.find({ username: user.username }).toArray();
         res.json(tasks);
     } catch (error) {
         console.error('Error fetching receiver tasks:', error);
