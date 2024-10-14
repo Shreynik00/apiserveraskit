@@ -256,7 +256,7 @@ app.get('/messages', async (req, res) => {
 app.get('/tasks/:username', async (req, res) => {
     const {username} = req.params; 
     try {
-        const task = await collection.find({ username }).toArray(); // Query for all tasks by username
+        const task = await collection.find({ username:username }).toArray(); // Query for all tasks by username
         if (task.length === 0) {
             return res.status(404).json({ message: 'No tasks found for this user.' });
         }
