@@ -256,19 +256,18 @@ app.get('/tasks/:username', async (req, res) => {
     const { username } = req.params;
 
     try {
-        // Fetch tasks where the username matches the provided username
-        const tasks = await collection.find({ username: username }).toArray();
-
+        // Fetch tasks where the username matches the logged-in user's username
+        const tasks = await collection.find({ username }).toArray();
         if (tasks.length === 0) {
-            return res.status(404).json({ message: 'No tasks found for this username.' });
+            return res.status(404).json({ message: 'No tasks found for this user.' });
         }
-
         res.json(tasks);
     } catch (error) {
-        console.error('Error fetching tasks for the user:', error);
+        console.error('Error fetching tasks:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
+
 
 
 
