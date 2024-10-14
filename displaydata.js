@@ -255,6 +255,7 @@ app.get('/messages', async (req, res) => {
 // API to fetch all tasks for the current logged-in user
 app.get('/reciverIndex/tasks', async (req, res) => {
     const user = req.session.user; // Get user from session
+
     if (!user || !user.username) {
         return res.status(401).json({ message: 'User not logged in.' });
     }
