@@ -155,22 +155,21 @@ app.post('/login', async (req, res) => {
 
 // API to fetch user details
 // API to fetch user details by username
-app.get('/tasks/:username', async (req, res) => {
+// API to fetch user details by username
+app.get('/user/:username', async (req, res) => {
     const { username } = req.params;
-
-    if (!username) {
-        return res.status(400).json({ message: 'Username is required.' });
-    }
-
     try {
-        // Fetch tasks where the username matches the logged-in user's username
-        const tasks = await collection.find({ username }).toArray();
-        res.json(tasks);
+        const user = await usersCollection.findOne({ username: username });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+        res.json({ username: user.username, email: user.email });
     } catch (error) {
-        console.error('Error fetching tasks:', error);
+        console.error('Error fetching user details:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
+
 
 
 // API to fetch tasks
