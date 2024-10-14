@@ -251,15 +251,12 @@ app.get('/messages', async (req, res) => {
 
 // API to fetch tasks for service receiver (only tasks posted by the logged-in user)
 // API to fetch tasks for service receiver (only tasks posted by the logged-in user)
-app.get('/reciverIndex/tasks', async (req, res) => {
-    const user = req.session.user; // Get user from session
-    if (!user || !user.username) {
-        return res.status(401).json({ message: 'User not logged in.' });
-    }
+app.get('/tasks/:username', async (req, res) => {
+   const { username} = req.params;
 
     try {
         // Fetch tasks where the username matches the logged-in user's username
-        const tasks = await collection.find({ username: user.username }).toArray();
+        const tasks = await collection.find({ username: username }).toArray();
         res.json(tasks);
     } catch (error) {
         console.error('Error fetching receiver tasks:', error);
