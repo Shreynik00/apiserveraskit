@@ -291,7 +291,7 @@ app.get('/role-selection', (req, res) => {
 
 // API to submit an offer
 app.post('/submit-offer', async (req, res) => {
-    const { taskId, deadline, Name,pitch, username } = req.body; // Extract username from the request body
+    const { taskId, deadline, message,pitch, username } = req.body; // Extract username from the request body
   
 
    
@@ -299,7 +299,7 @@ app.post('/submit-offer', async (req, res) => {
         await offersCollection.insertOne({
             taskId: new ObjectId(taskId), 
             username, // Store the username directly
-            Name,
+            message,
             deadline,
             pitch
         });
