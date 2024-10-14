@@ -253,17 +253,12 @@ app.get('/messages', async (req, res) => {
 
 // API to fetch tasks for service receiver (only tasks posted by the logged-in user)
 // API to fetch all tasks for the current logged-in user
-app.get('/task', async (req, res) => {
-    // Check if the user is logged in and username is available in the session
-    if (!req.session.user || !req.session.user.username) {
-        return res.status(401).json({ message: 'User not logged in.' });
-    }
-
-    const username = req.session.user.username;  // Fetch username from the session
+app.get('/task/:usernames', async (req, res) => {
+     const { usernames } = req.params;
 
     try {
         // Query for all tasks associated with the current logged-in user's username
-        const tasks = await collection.find({ username: username }).toArray();
+        const tasks = await collection.find({ username: usernames }).toArray();
 
         // Check if tasks exist for the current user
         if (tasks.length === 0) {
