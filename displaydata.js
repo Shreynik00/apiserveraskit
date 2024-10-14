@@ -86,8 +86,6 @@ app.get('/current-username', (req, res) => {
     }
 });
 
-// API to fetch task details by ID
-// API to fetch all tasks for a specific username
 // Fetch task details by ID
 app.get('/tasks/:id', async (req, res) => {
     const taskId = req.params.id; 
@@ -104,6 +102,7 @@ app.get('/tasks/:id', async (req, res) => {
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
+
 
 
 // API to fetch offers for a specific task
