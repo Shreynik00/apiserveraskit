@@ -253,7 +253,7 @@ app.get('/messages', async (req, res) => {
 
 // API to fetch tasks for service receiver (only tasks posted by the logged-in user)
 // API to fetch all tasks for the current logged-in user
-app.get('/task/:usernames', async (req, res) => {
+app.get('/task/:username', async (req, res) => {
      const { usernames } = req.params;
 
     try {
