@@ -252,11 +252,11 @@ app.get('/messages', async (req, res) => {
 
 
 // API to fetch tasks for service receiver (only tasks posted by the logged-in user)
+// API to fetch all tasks for a specific username
 app.get('/tasks/:username', async (req, res) => {
-       const { username } = req.params;
+    const username = req.params.username; 
     try {
-        // Fetch tasks where the username matches the logged-in user's username
-        const tasks = await collection.find({ username }).toArray();
+        const tasks = await collection.find({ username: username }).toArray(); // Query for all tasks by username
         if (tasks.length === 0) {
             return res.status(404).json({ message: 'No tasks found for this user.' });
         }
@@ -266,6 +266,7 @@ app.get('/tasks/:username', async (req, res) => {
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
+
 
 
 
