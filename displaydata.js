@@ -259,7 +259,7 @@ app.get('/reciverIndex/tasks', async (req, res) => {
     }
 
     try {
-        const tasks = await collection.find({  user.username }).toArray();
+        const tasks = await collection.find({ username: user.username }).toArray();
         res.json(tasks);
     } catch (error) {
         console.error('Error fetching receiver tasks:', error);
