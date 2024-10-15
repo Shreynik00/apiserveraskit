@@ -67,7 +67,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve the main HTML file for user setup
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'page1.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // API to fetch current logged-in username from session
