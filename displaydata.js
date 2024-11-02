@@ -324,6 +324,7 @@ app.post('/add-task', async (req, res) => {
             detail,
             deadline,  // Store the deadline of the task
             mode,
+            urgencyType,
             type,
             budget,    // Store the budget value
             username   // Store the username from the request body
