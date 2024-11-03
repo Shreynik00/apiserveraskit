@@ -315,7 +315,7 @@ app.post('/submit-offer', async (req, res) => {
 
 // API to add a new task with user's specific ID
 app.post('/add-task', async (req, res) => {
-    const { title, detail, deadline, mode, type,urgencyType, budget, username } = req.body;  // Extract username from the request body
+    const { title, detail, deadline, mode, type,urgencyType,paymentMethod, budget, username } = req.body;  // Extract username from the request body
 
     try {
         // Insert task with the provided username and other details
@@ -325,6 +325,7 @@ app.post('/add-task', async (req, res) => {
             deadline,  // Store the deadline of the task
             mode,
             urgencyType,
+            paymentMethod,
             type,
             budget,    // Store the budget value
             username   // Store the username from the request body
