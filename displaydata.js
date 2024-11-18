@@ -97,7 +97,38 @@ app.get('/tasks/:id', async (req, res) => {
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
+// api to accept offer from reciver end 
+app.post('/acceptOffer', async (req, res) => {
+    const { taskId, offerId } = req.body;
 
+    if (!taskId || !offerId) {
+        return res.status(400).json({ message: 'taskId and offerId are required.' });
+    }
+
+    try {
+        // Update the "one" collection for the task
+        const taskUpdateResult = await collection.updateOne(
+            { _id: new ObjectId(taskId) },
+            { $set: { status: 'accepted' } }
+        );
+
+        // Update the "Offer" collection for the offer
+        const offerUpdateResult = await offersCollection.updateOne(
+            { _id: new ObjectId(offerId) },
+            { $set: { status: 'accepted' } }
+        );
+
+        // Check if updates were successful
+        if (taskUpdateResult.matchedCount === 0 || offerUpdateResult.matchedCount === 0) {
+            return res.status(404).json({ message: 'Task or Offer not found.' });
+        }
+
+        res.status(200).json({ message: 'Offer accepted successfully.' });
+    } catch (error) {
+        console.error('Error updating status:', error);
+        res.status(500).json({ message: 'Failed to accept offer.' });
+    }
+});
 
 
 // API to fetch offers for a specific task
