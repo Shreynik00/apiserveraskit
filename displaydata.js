@@ -80,6 +80,28 @@ app.get('/current-username', (req, res) => {
     }
 });
 
+// Delete Task API
+app.delete('/deleteTask', async (req, res) => {
+    const { taskId } = req.body;
+
+    if (!taskId) {
+        return res.status(400).json({ message: 'Task ID is required.' });
+    }
+
+    try {
+        // Delete the task from the "one" collection
+        const deleteResult = await collection.deleteOne({ _id: new ObjectId(taskId) });
+
+        if (deleteResult.deletedCount === 0) {
+            return res.status(404).json({ message: 'Task not found.' });
+        }
+
+        res.status(200).json({ message: 'Task deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        res.status(500).json({ message: 'Failed to delete task.' });
+    }
+});
 
 // Fetch task details by ID
 app.get('/tasks/:id', async (req, res) => {
