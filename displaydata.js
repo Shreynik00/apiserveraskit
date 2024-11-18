@@ -70,6 +70,8 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+
+
 // API to fetch current logged-in username from session
 // API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
@@ -79,6 +81,7 @@ app.get('/current-username', (req, res) => {
         res.status(401).json({ message: 'User not logged in.' });
     }
 });
+
  api to accept offer reciver end 
 app.post('/acceptOffer', async (req, res) => {
     const { taskId, offerId } = req.body;
