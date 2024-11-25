@@ -94,7 +94,7 @@ app.post('/api/user/profile', async (req, res) => {
         if (existingUser) {
             // Insert the new data into the collection as a separate document
             const newProfile = {
-                username,
+               
                 about,
                 qualification,
                 skills,
