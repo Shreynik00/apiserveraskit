@@ -270,7 +270,7 @@ app.post('/login', async (req, res) => {
 app.get('/user/:username', async (req, res) => {
     const { username } = req.params;
     try {
-        const user = await usersCollection.findOne({ username: username });
+        const user = await profileInfosCollection.findOne({ username: username });
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
