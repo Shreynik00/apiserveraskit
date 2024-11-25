@@ -80,16 +80,6 @@ app.get('/current-username', (req, res) => {
     }
 });
 // profile set up 
-// API to fetch current logged-in username from session
-app.get('/current-username', (req, res) => {
-    if (req.session.user && req.session.user.username) {
-        res.json({ username: req.session.user.username });
-    } else {
-        res.status(401).json({ message: 'User not logged in.' });
-    }
-});
-
-// Profile setup API to update existing user document
 app.post('/api/user/profile', async (req, res) => {
     const { username, about, qualification, skills, languages, transport } = req.body;
 
@@ -99,6 +89,9 @@ app.post('/api/user/profile', async (req, res) => {
     }
 
     try {
+        // Log the received data
+        console.log('Updating profile for:', username);
+
         // Update the document where the username matches
         const result = await usersCollection.updateOne(
             { username }, // Filter to find the document by username
@@ -121,6 +114,15 @@ app.post('/api/user/profile', async (req, res) => {
     } catch (error) {
         console.error('Error updating profile data:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// API to fetch current logged-in username from session
+app.get('/current-username', (req, res) => {
+    if (req.session.user && req.session.user.username) {
+        res.json({ username: req.session.user.username });
+    } else {
+        res.status(401).json({ message: 'User not logged in.' });
     }
 });
 
