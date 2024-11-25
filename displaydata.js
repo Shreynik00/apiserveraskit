@@ -83,10 +83,10 @@ app.get('/current-username', (req, res) => {
 // profile set up 
 // Profile setup API to update or insert profile data
 app.post('/api/user/profile', async (req, res) => {
-    const { username, about, qualification, skills, languages, transport } = req.body;
+    const { username, about,  skills} = req.body;
 
     // Validate required fields
-    if (!username || !about || !qualification || !skills || !languages || !transport) {
+    if (!username || !about ||  !skills ) {
         return res.status(400).json({ message: 'Invalid input data' });
     }
 
@@ -101,10 +101,9 @@ app.post('/api/user/profile', async (req, res) => {
                 {
                     $set: {
                         about,
-                        qualification,
+                        
                         skills,
-                        languages,
-                        transport,
+                   
                     },
                 }
             );
@@ -119,10 +118,9 @@ app.post('/api/user/profile', async (req, res) => {
             const newProfile = {
                 username,
                 about,
-                qualification,
+               
                 skills,
-                languages,
-                transport,
+                
             };
 
             await profileInfosCollection.insertOne(newProfile);
