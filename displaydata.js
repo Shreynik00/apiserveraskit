@@ -79,6 +79,40 @@ app.get('/current-username', (req, res) => {
         res.status(401).json({ message: 'User not logged in.' });
     }
 });
+// profile set up 
+app.post('/api/user/profile', async (req, res) => {
+    const { username, about, qualification, skills, languages, transport } = req.body;
+
+    if (!username || !about || !qualification || !skills || !languages || !transport) {
+        return res.status(400).json({ message: 'Invalid input data' });
+    }
+
+    try {
+        // Check if a document with the provided username exists
+        const existingUser = await usersCollection.findOne({ username });
+
+        if (existingUser) {
+            // Insert the new data into the collection as a separate document
+            const newProfile = {
+                username,
+                about,
+                qualification,
+                skills,
+                languages,
+                transport,
+            };
+
+            await usersCollection.insertOne(newProfile);
+
+            res.status(200).json({ message: 'Profile data inserted successfully' });
+        } else {
+            res.status(404).json({ message: 'Username not found in the collection' });
+        }
+    } catch (error) {
+        console.error('Error inserting profile data:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 // Delete Task API
 app.delete('/deleteTask', async (req, res) => {
