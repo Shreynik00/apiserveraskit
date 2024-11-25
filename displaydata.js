@@ -53,6 +53,7 @@ async function connectDB() {
         collection = database.collection('one'); // Tasks
         usersCollection = database.collection('users'); // Users
         offersCollection = database.collection('Offer'); // Offers
+        profileInfosCollection= database.collection('profileInfos'); // all profiles 
         messagesCollection = database.collection('messages'); // Messages
         console.log('Connected to MongoDB');
     } catch (error) {
@@ -80,6 +81,7 @@ app.get('/current-username', (req, res) => {
     }
 });
 // profile set up 
+// Profile setup API to update or insert profile data
 app.post('/api/user/profile', async (req, res) => {
     const { username, about, qualification, skills, languages, transport } = req.body;
 
@@ -89,30 +91,46 @@ app.post('/api/user/profile', async (req, res) => {
     }
 
     try {
-        // Log the received data
-        console.log('Updating profile for:', username);
+        // Check if a document with the provided username exists in 'profileInfos' collection
+        const existingProfile = await profileInfosCollection.findOne({ username });
 
-        // Update the document where the username matches
-        const result = await usersCollection.updateOne(
-            { username }, // Filter to find the document by username
-            {
-                $set: { // Update fields
-                    about,
-                    qualification,
-                    skills,
-                    languages,
-                    transport,
-                },
+        if (existingProfile) {
+            // Update the existing profile
+            const result = await profileInfosCollection.updateOne(
+                { username },
+                {
+                    $set: {
+                        about,
+                        qualification,
+                        skills,
+                        languages,
+                        transport,
+                    },
+                }
+            );
+
+            if (result.matchedCount > 0) {
+                return res.status(200).json({ message: 'Profile updated successfully' });
+            } else {
+                return res.status(500).json({ message: 'Failed to update profile data' });
             }
-        );
-
-        if (result.matchedCount > 0) {
-            res.status(200).json({ message: 'Profile data updated successfully' });
         } else {
-            res.status(404).json({ message: 'Username not found in the collection' });
+            // Insert a new profile document
+            const newProfile = {
+                username,
+                about,
+                qualification,
+                skills,
+                languages,
+                transport,
+            };
+
+            await profileInfosCollection.insertOne(newProfile);
+
+            return res.status(201).json({ message: 'Profile created successfully' });
         }
     } catch (error) {
-        console.error('Error updating profile data:', error);
+        console.error('Error handling profile data:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 });
