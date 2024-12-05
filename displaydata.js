@@ -184,17 +184,22 @@ app.get('/tasks/:id', async (req, res) => {
 });
 // api to accept offer from reciver end 
 app.post('/acceptOffer', async (req, res) => {
-    const { taskId, offerId } = req.body;
+    const { taskId, offerId, username } = req.body;
 
-    if (!taskId || !offerId) {
-        return res.status(400).json({ message: 'taskId and offerId are required.' });
+    if (!taskId || !offerId || !username) {
+        return res.status(400).json({ message: 'taskId, offerId, and username are required.' });
     }
 
     try {
         // Update the "one" collection for the task
         const taskUpdateResult = await collection.updateOne(
             { _id: new ObjectId(taskId) },
-            { $set: { status: 'accepted' } }
+            { 
+                $set: { 
+                    status: 'accepted',
+                    TaskProvider: username // Add TaskProvider field with username
+                } 
+            }
         );
 
         // Update the "Offer" collection for the offer
