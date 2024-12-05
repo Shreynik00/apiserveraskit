@@ -220,6 +220,28 @@ app.post('/acceptOffer', async (req, res) => {
     }
 });
 
+app.post('/acceptedOffers', async (req, res) => {
+    const { username } = req.body;
+
+    if (!username) {
+        return res.status(400).json({ message: 'Username is required.' });
+    }
+
+    try {
+        const tasks = await collection.find({ TaskProvider: username }).toArray();
+
+        if (!tasks.length) {
+            return res.status(404).json({ message: 'No tasks found for the given username.' });
+        }
+
+        res.status(200).json(tasks);
+    } catch (error) {
+        console.error('Error fetching accepted offers:', error);
+        res.status(500).json({ message: 'Failed to fetch accepted offers.' });
+    }
+});
+
+
 
 // API to fetch offers for a specific task
 app.get('/offers/:taskId', async (req, res) => {
