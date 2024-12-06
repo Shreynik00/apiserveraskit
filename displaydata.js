@@ -5,6 +5,9 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 
+const http = require('http'); // Import HTTP to use with Socket.IO
+const { Server } = require('socket.io');
+
 
 const app = express();
 const port = 3000;
@@ -69,6 +72,63 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Serve the main HTML file for user setup
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+
+// Chat events with Socket.IO
+io.on('connection', (socket) => {
+    console.log('A user connected:', socket.id);
+
+    // Listen for incoming chat messages
+    socket.on('chatMessage', async (messageData) => {
+        const { sender, receiver, message } = messageData;
+
+        try {
+            // Save the message to MongoDB
+            await messagesCollection.insertOne({
+                sender,
+                receiver,
+                message,
+                timestamp: new Date()
+            });
+
+            // Emit the message to the receiver
+            io.to(receiver).emit('newMessage', messageData);
+
+        } catch (error) {
+            console.error('Error saving message:', error);
+        }
+    });
+
+    // Join a specific room for private chat
+    socket.on('joinRoom', (roomId) => {
+        socket.join(roomId);
+        console.log(`User ${socket.id} joined room ${roomId}`);
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log('A user disconnected:', socket.id);
+    });
+});
+
+// API to fetch chat history between two users
+app.get('/chat/:sender/:receiver', async (req, res) => {
+    const { sender, receiver } = req.params;
+
+    try {
+        const messages = await messagesCollection.find({
+            $or: [
+                { sender, receiver },
+                { sender: receiver, receiver: sender }
+            ]
+        }).sort({ timestamp: 1 }).toArray();
+
+        res.status(200).json(messages);
+    } catch (error) {
+        console.error('Error fetching chat history:', error);
+        res.status(500).json({ message: 'Failed to fetch chat history.' });
+    }
 });
 
 // API to fetch current logged-in username from session
