@@ -289,13 +289,35 @@ app.post('/acceptedOffers', async (req, res) => {
     }
 
     try {
+        // Find tasks where 'TaskProvider' matches the provided 'username'
         const tasks = await collection.find({ TaskProvider: username }).toArray();
 
         if (!tasks.length) {
-            return res.status(404).json({ message: 'No tasks found for the given username.' });
+            return res.status(404).json({ message: 'No tasks found for the given TaskProvider.' });
         }
 
-        res.status(200).json(tasks);
+        // This part ensures the existing functionality is not broken.
+        // We return the task details and add the username of the person accepting the task.
+        const tasksWithUsernames = tasks.map(task => {
+            return {
+                ...task,
+                username: task.username, // Include the username of the task owner (the person who accepted the task)
+                taskDetails: {
+                    title: task.title,
+                    detail: task.detail,
+                    deadline: task.deadline,
+                    budget: task.budget,
+                    status: task.status,
+                    mode: task.mode,
+                    urgencyType: task.urgencyType,
+                    paymentMethod: task.paymentMethod,
+                    requirements: task.requirements,
+                    type: task.type
+                }
+            };
+        });
+
+        res.status(200).json(tasksWithUsernames);
     } catch (error) {
         console.error('Error fetching accepted offers:', error);
         res.status(500).json({ message: 'Failed to fetch accepted offers.' });
