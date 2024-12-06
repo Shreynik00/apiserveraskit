@@ -321,69 +321,7 @@ app.get('/tasks', async (req, res) => {
     }
 });
 
-// API to send a message
-app.post('/sendMessage', async (req, res) => {
-    const { title, message, taskOwnerId } = req.body; // Extract title, message, and task owner's ID from the request body
-    const user = req.session.user; // Get the currently logged-in user from the session
 
-    if (!user || !user._id) { // Check if user is logged in
-        return res.status(401).json({ message: 'User not logged in.' });
-    }
-
-    try {
-        // Fetch sender's username using their _id
-        const sender = await usersCollection.findOne({ _id: new ObjectId(user._id) });
-        if (!sender || !sender.username) {
-            return res.status(404).json({ message: 'Sender not found.' });
-        }
-
-        // Fetch task owner's username using taskOwnerId
-        const taskOwner = await usersCollection.findOne({ _id: new ObjectId(taskOwnerId) });
-        if (!taskOwner || !taskOwner.username) {
-            return res.status(404).json({ message: 'Task owner not found.' });
-        }
-
-        // Insert the message into the 'messages' collection with usernames instead of IDs
-        await messagesCollection.insertOne({
-            senderUsername: sender.username, // Store sender's username
-            recipientUsername: taskOwner.username, // Store task owner's username
-            title, // Message title
-            message // Message content
-        });
-
-        res.json({ message: 'Message sent successfully.' }); // Return success response
-    } catch (error) {
-        console.error('Error sending message:', error); // Log any errors
-        res.status(500).json({ message: 'Internal server error.' }); // Return error response
-    }
-});
-
-//get message
-app.get('/messages', async (req, res) => {
-    const userId = req.query.userId; // Get userId from the URL query parameters
-
-    if (!userId) { // Check if userId is provided
-        return res.status(400).json({ message: 'UserId not provided.' });
-    }
-
-    try {
-        // Find messages where the recipientId matches the userId from the URL
-        const messages = await messagesCollection.find({
-            recipientId: new ObjectId(userId) // Convert userId to ObjectId
-        }).toArray(); // Convert cursor to array
-
-        // Format messages with only title and message
-        const formattedMessages = messages.map(msg => ({
-            title: msg.title,
-            message: msg.message
-        }));
-
-        res.json(formattedMessages); // Return the formatted messages
-    } catch (error) {
-        console.error('Error fetching messages:', error); // Log any errors
-        res.status(500).json({ message: 'Internal server error.' }); // Return error response
-    }
-});
 
 
 
