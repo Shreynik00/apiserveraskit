@@ -76,6 +76,7 @@ app.get('/', (req, res) => {
 
 
 // Chat events with Socket.IO
+// Socket.IO chat events
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
 
@@ -92,9 +93,9 @@ io.on('connection', (socket) => {
                 timestamp: new Date()
             });
 
-            // Emit the message to the receiver
-            io.to(receiver).emit('newMessage', messageData);
-
+            // Emit the message to the receiver's room
+            const roomId = `${sender}-${receiver}`;
+            io.to(roomId).emit('newMessage', messageData);
         } catch (error) {
             console.error('Error saving message:', error);
         }
