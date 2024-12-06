@@ -13,6 +13,8 @@
     "cors": "^2.8.5",
     "express-session": "^1.17.3",
     "path": "^0.12.7"
+        "http": "^0.0.1-security", // For the HTTP server
+    "socket.io": "^4.5.1"     // For real-time communication
   },
   "engines": {
     "node": ">=20.15.1"
