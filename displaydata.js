@@ -125,7 +125,7 @@ io.on('connection', (socket) => {
 });
 
 //to redirect to sendmessage page from reciver end
-app.post('/chatredirector', async (req, res) => {
+app.get('/chatredirector', async (req, res) => {
     const { username } = req.body;
 
     // Validate input
