@@ -126,14 +126,14 @@ io.on('connection', (socket) => {
 
 //to redirect to sendmessage page from reciver end
 app.post('/chatProvider', async (req, res) => {
-    const {  currentUser } = req.body;
+    const {  username } = req.body;
 
-    if ( !currentUser) {
+    if ( !username) {
         return res.status(400).json({ message: 'Task ID and current user are required.' });
     }
 
     try {
-        const task = await collection.findOne({  username: currentUser });
+        const task = await collection.findOne({  username: username });
 
         if ( !task.TaskProvider) {
             return res.status(404).json({ message: 'Task or TaskProvider not found.' });
