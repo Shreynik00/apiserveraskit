@@ -37,6 +37,12 @@ app.use(cors({
     credentials: true  // Allow credentials if needed
     
 }));
+// Allow requests from your frontend domain
+app.use(cors({
+  origin: 'https://shreynik00.github.io',
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
 
 // Handle preflight requests
 app.options('*', cors());
