@@ -22,7 +22,13 @@ let collection, usersCollection, offersCollection, messagesCollection;
 
 // Initialize Socket.IO
 const server = http.createServer(app);
-const io = new Server(server);
+//const io = new Server(server);
+const io = require('socket.io')(server, {
+  cors: {
+    origin: 'https://shreynik00.github.io',
+    methods: ['GET', 'POST']
+  }
+});
 
 // Socket.IO connection and events go here...
 
