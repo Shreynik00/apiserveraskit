@@ -20,6 +20,11 @@ let collection, usersCollection, offersCollection, messagesCollection;
 
 // Middleware to parse JSON requests
 
+// Initialize Socket.IO
+const server = http.createServer(app);
+const io = new Server(server);
+
+// Socket.IO connection and events go here...
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -57,6 +62,7 @@ async function connectDB() {
         usersCollection = database.collection('users'); // Users
         offersCollection = database.collection('Offer'); // Offers
         profileInfosCollection= database.collection('profileInfos'); // all profiles 
+        
         messagesCollection = database.collection('messages'); // Messages
         console.log('Connected to MongoDB');
     } catch (error) {
@@ -508,6 +514,6 @@ app.post('/add-task', async (req, res) => {
 
 
 // Start the server
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
