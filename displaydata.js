@@ -148,6 +148,7 @@ app.get('/chat/:sender/:receiver', async (req, res) => {
   }
 });
 
+
 // API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
   if (req.session.user && req.session.user.username) {
