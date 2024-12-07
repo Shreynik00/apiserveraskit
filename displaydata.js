@@ -184,6 +184,29 @@ app.post('/api/user/profile', async (req, res) => {
   }
 });
 
+app.get('/messages', async (req, res) => {
+    const { currentUser, receiver } = req.query;
+
+    if (!currentUser || !receiver) {
+        return res.status(400).json({ error: "currentUser and receiver are required" });
+    }
+
+    try {
+        const messages = await MessageCollection.find({
+            $or: [
+                { sender: currentUser, receiver },
+                { sender: receiver, receiver: currentUser }
+            ]
+        }).sort({ timestamp: 1 }).exec();
+
+        res.json(messages);
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
 // API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
     if (req.session.user && req.session.user.username) {
