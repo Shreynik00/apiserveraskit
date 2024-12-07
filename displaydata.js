@@ -88,7 +88,7 @@ io.on('connection', (socket) => {
   });
 
   // Listen for incoming chat messages
- socket.on('chatMessage', async (messageData) => {
+  socket.on('chatMessage', async (messageData) => {
     const { sender, receiver, message } = messageData;
 
     try {
@@ -99,16 +99,18 @@ io.on('connection', (socket) => {
       }
 
       // Save the message to MongoDB
+      const timestamp = new Date();
       await messagesCollection.insertOne({
         sender,
         receiver,
         message,
-        timestamp: new Date(),
+        timestamp,
       });
 
       // Emit the message to the receiver's room
       const roomId = [sender, receiver].sort().join('-');
-      io.to(roomId).emit('newMessage', { sender, receiver, message, timestamp: new Date() });
+      io.to(roomId).emit('newMessage', { sender, receiver, message, timestamp });
+
       console.log(`Message sent from ${sender} to ${receiver}`);
     } catch (error) {
       console.error('Error saving message:', error);
