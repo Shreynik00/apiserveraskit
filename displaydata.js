@@ -22,66 +22,50 @@ let collection, usersCollection, offersCollection, messagesCollection;
 
 // Initialize Socket.IO
 const server = http.createServer(app);
-//const io = new Server(server);
 const io = require('socket.io')(server, {
   cors: {
     origin: 'https://shreynik00.github.io',
-    methods: ['GET', 'POST']
-  }
+    methods: ['GET', 'POST'],
+  },
 });
 
-// Socket.IO connection and events go here...
-
+// Middleware Setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(
+  cors({
+    origin: 'https://shreynik00.github.io',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })
+);
 
-
-app.use(cors({
-    origin: 'https://shreynik00.github.io',  // Allow your GitHub Pages site
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow specific HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
-    credentials: true  // Allow credentials if needed
-    
-}));
-// Allow requests from your frontend domain
-app.use(cors({
-  origin: 'https://shreynik00.github.io',
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type']
-}));
-
-// Handle preflight requests
-app.options('*', cors());
-
-
-// Session configuration
-
-
-app.use(session({
+// Session Configuration
+app.use(
+  session({
     secret: 'your-secret-key', // Replace with a secure secret
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true } // Ensure secure cookies if using HTTPS
-}));
-
+    cookie: { secure: false, httpOnly: true }, // Set secure:true if using HTTPS
+  })
+);
 
 // Connect to MongoDB once at the start
 async function connectDB() {
-    try {
-        await client.connect();
-        const database = client.db('Freelancer');
-        collection = database.collection('one'); // Tasks
-        usersCollection = database.collection('users'); // Users
-        offersCollection = database.collection('Offer'); // Offers
-        profileInfosCollection= database.collection('profileInfos'); // all profiles 
-        
-        messagesCollection = database.collection('messages'); // Messages
-        console.log('Connected to MongoDB');
-    } catch (error) {
-        console.error('MongoDB connection error:', error);
-    }
+  try {
+    await client.connect();
+    const database = client.db('Freelancer');
+    collection = database.collection('one'); // Tasks
+    usersCollection = database.collection('users'); // Users
+    offersCollection = database.collection('Offer'); // Offers
+    profileInfosCollection = database.collection('profileInfos'); // Profiles
+    messagesCollection = database.collection('messages'); // Messages
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+  }
 }
-
 connectDB();
 
 // Serve static files from the 'public' directory
@@ -89,127 +73,115 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve the main HTML file for user setup
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-
-// Chat events with Socket.IO
 // Socket.IO chat events
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+  console.log('A user connected:', socket.id);
 
-    // Listen for incoming chat messages
-    socket.on('chatMessage', async (messageData) => {
-        const { sender, receiver, message } = messageData;
+  // Join a room for private chat
+  socket.on('joinRoom', ({ sender, receiver }) => {
+    const roomId = [sender, receiver].sort().join('-'); // Consistent room ID
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined room ${roomId}`);
+  });
 
-        try {
-            // Save the message to MongoDB
-            await messagesCollection.insertOne({
-                sender,
-                receiver,
-                message,
-                timestamp: new Date()
-            });
+  // Listen for incoming chat messages
+  socket.on('chatMessage', async (messageData) => {
+    const { sender, receiver, message } = messageData;
 
-            // Emit the message to the receiver's room
-            const roomId = `${sender}-${receiver}`;
-            io.to(roomId).emit('newMessage', messageData);
-        } catch (error) {
-            console.error('Error saving message:', error);
-        }
-    });
+    try {
+      // Save the message to MongoDB
+      await messagesCollection.insertOne({
+        sender,
+        receiver,
+        message,
+        timestamp: new Date(),
+      });
 
-    // Join a specific room for private chat
-    socket.on('joinRoom', (roomId) => {
-        socket.join(roomId);
-        console.log(`User ${socket.id} joined room ${roomId}`);
-    });
+      // Emit the message to the receiver's room
+      const roomId = [sender, receiver].sort().join('-');
+      io.to(roomId).emit('newMessage', messageData);
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  });
 
-    // Handle disconnection
-    socket.on('disconnect', () => {
-        console.log('A user disconnected:', socket.id);
-    });
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('A user disconnected:', socket.id);
+  });
 });
 
 // API to fetch chat history between two users
 app.get('/chat/:sender/:receiver', async (req, res) => {
-    const { sender, receiver } = req.params;
+  const { sender, receiver } = req.params;
 
-    try {
-        const messages = await messagesCollection.find({
-            $or: [
-                { sender, receiver },
-                { sender: receiver, receiver: sender }
-            ]
-        }).sort({ timestamp: 1 }).toArray();
+  try {
+    const messages = await messagesCollection
+      .find({
+        $or: [
+          { sender, receiver },
+          { sender: receiver, receiver: sender },
+        ],
+      })
+      .sort({ timestamp: 1 })
+      .toArray();
 
-        res.status(200).json(messages);
-    } catch (error) {
-        console.error('Error fetching chat history:', error);
-        res.status(500).json({ message: 'Failed to fetch chat history.' });
-    }
+    res.status(200).json(messages);
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
+    res.status(500).json({ message: 'Failed to fetch chat history.' });
+  }
 });
 
-// API to fetch current logged-in username from session
 // API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
-    if (req.session.user && req.session.user.username) {
-        res.json({ username: req.session.user.username });
-    } else {
-        res.status(401).json({ message: 'User not logged in.' });
-    }
+  if (req.session.user && req.session.user.username) {
+    res.json({ username: req.session.user.username });
+  } else {
+    res.status(401).json({ message: 'User not logged in.' });
+  }
 });
-// profile set up 
+
 // Profile setup API to update or insert profile data
 app.post('/api/user/profile', async (req, res) => {
-    const { username, about,  skills} = req.body;
+  const { username, about, skills } = req.body;
 
-    // Validate required fields
-    if (!username || !about ||  !skills ) {
-        return res.status(400).json({ message: 'Invalid input data' });
-    }
+  if (!username || !about || !skills) {
+    return res.status(400).json({ message: 'Invalid input data' });
+  }
 
-    try {
-        // Check if a document with the provided username exists in 'profileInfos' collection
-        const existingProfile = await profileInfosCollection.findOne({ username });
+  try {
+    // Check if a profile already exists
+    const existingProfile = await profileInfosCollection.findOne({ username });
 
-        if (existingProfile) {
-            // Update the existing profile
-            const result = await profileInfosCollection.updateOne(
-                { username },
-                {
-                    $set: {
-                        about,
-                        
-                        skills,
-                   
-                    },
-                }
-            );
-
-            if (result.matchedCount > 0) {
-                return res.status(200).json({ message: 'Profile updated successfully' });
-            } else {
-                return res.status(500).json({ message: 'Failed to update profile data' });
-            }
-        } else {
-            // Insert a new profile document
-            const newProfile = {
-                username,
-                about,
-               
-                skills,
-                
-            };
-
-            await profileInfosCollection.insertOne(newProfile);
-
-            return res.status(201).json({ message: 'Profile created successfully' });
+    if (existingProfile) {
+      // Update existing profile
+      const result = await profileInfosCollection.updateOne(
+        { username },
+        {
+          $set: { about, skills },
         }
-    } catch (error) {
-        console.error('Error handling profile data:', error);
-        res.status(500).json({ message: 'Internal server error' });
+      );
+
+      if (result.matchedCount > 0) {
+        return res.status(200).json({ message: 'Profile updated successfully' });
+      } else {
+        return res.status(500).json({ message: 'Failed to update profile data' });
+      }
+    } else {
+      // Create a new profile
+      const newProfile = { username, about, skills };
+      await profileInfosCollection.insertOne(newProfile);
+
+      return res.status(201).json({ message: 'Profile created successfully' });
     }
+  } catch (error) {
+    console.error('Error handling profile data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 // API to fetch current logged-in username from session
