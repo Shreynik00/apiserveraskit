@@ -124,31 +124,27 @@ io.on('connection', (socket) => {
   });
 });
 
-//to redirect to sendmessage page from reciver end
-app.get('/chatredirector', async (req, res) => {
-    const { username } = req.body;
+app.post('/chatProvider', async (req, res) => {
+    const { taskId, currentUser } = req.body;
 
-    // Validate input
-    if (!username) {
-        return res.status(400).json({ message: 'Username is required.' });
+    if (!taskId || !currentUser) {
+        return res.status(400).json({ message: 'Task ID and current user are required.' });
     }
 
     try {
-        // Replace 'collection' with the actual collection name
-        const task = await collection.findOne({ username });
+        const task = await collection.findOne({ _id: taskId, username: currentUser });
 
-        // Check if TaskProvider exists
         if (!task || !task.TaskProvider) {
-            return res.status(404).json({ message: 'TaskProvider not found for this username.' });
+            return res.status(404).json({ message: 'Task or TaskProvider not found.' });
         }
 
-        // Return TaskProvider
         res.status(200).json({ TaskProvider: task.TaskProvider });
     } catch (error) {
         console.error('Error fetching TaskProvider:', error);
         res.status(500).json({ message: 'Failed to fetch TaskProvider.' });
     }
 });
+
 
 // API to fetch chat history between two users
 app.get('/chat/:sender/:receiver', async (req, res) => {
