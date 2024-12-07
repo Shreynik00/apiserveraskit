@@ -88,10 +88,16 @@ io.on('connection', (socket) => {
   });
 
   // Listen for incoming chat messages
-  socket.on('chatMessage', async (messageData) => {
+ socket.on('chatMessage', async (messageData) => {
     const { sender, receiver, message } = messageData;
 
     try {
+      // Validate messageData
+      if (!sender || !receiver || !message) {
+        socket.emit('error', 'Invalid message data');
+        return;
+      }
+
       // Save the message to MongoDB
       await messagesCollection.insertOne({
         sender,
@@ -102,9 +108,11 @@ io.on('connection', (socket) => {
 
       // Emit the message to the receiver's room
       const roomId = [sender, receiver].sort().join('-');
-      io.to(roomId).emit('newMessage', messageData);
+      io.to(roomId).emit('newMessage', { sender, receiver, message, timestamp: new Date() });
+      console.log(`Message sent from ${sender} to ${receiver}`);
     } catch (error) {
       console.error('Error saving message:', error);
+      socket.emit('error', 'Failed to save message');
     }
   });
 
@@ -119,6 +127,7 @@ app.get('/chat/:sender/:receiver', async (req, res) => {
   const { sender, receiver } = req.params;
 
   try {
+    // Fetch messages from the MongoDB collection
     const messages = await messagesCollection
       .find({
         $or: [
@@ -126,9 +135,10 @@ app.get('/chat/:sender/:receiver', async (req, res) => {
           { sender: receiver, receiver: sender },
         ],
       })
-      .sort({ timestamp: 1 })
+      .sort({ timestamp: 1 }) // Sort messages by timestamp in ascending order
       .toArray();
 
+    // Send the fetched messages as a response
     res.status(200).json(messages);
   } catch (error) {
     console.error('Error fetching chat history:', error);
