@@ -154,11 +154,6 @@ app.post('/chatProvider', async (req, res) => {
   }
 });
 
-// Start Server
-server.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
-
 
 // API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
