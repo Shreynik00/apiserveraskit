@@ -2,27 +2,21 @@ const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
 const path = require('path');
 const session = require('express-session');
-const bcrypt = require('bcryptjs');
 const cors = require('cors');
-
-const http = require('http'); // Import HTTP to use with Socket.IO
+const http = require('http');
 const { Server } = require('socket.io');
-
 
 const app = express();
 const port = 3000;
 
-
-// Connection URI for MongoDB
+// MongoDB Connection URI
 const uri = 'mongodb+srv://Shreynik:Dinku2005@cluster0.xh7s8.mongodb.net/';
 const client = new MongoClient(uri);
 let collection, usersCollection, offersCollection, messagesCollection;
 
-// Middleware to parse JSON requests
-
-// Initialize Socket.IO
+// Initialize HTTP Server and Socket.IO
 const server = http.createServer(app);
-const io = require('socket.io')(server, {
+const io = new Server(server, {
   cors: {
     origin: 'https://shreynik00.github.io',
     methods: ['GET', 'POST'],
@@ -44,14 +38,14 @@ app.use(
 // Session Configuration
 app.use(
   session({
-    secret: 'your-secret-key', // Replace with a secure secret
+    secret: 'your-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true }, // Set secure:true if using HTTPS
+    cookie: { secure: false, httpOnly: true },
   })
 );
 
-// Connect to MongoDB once at the start
+// Connect to MongoDB
 async function connectDB() {
   try {
     await client.connect();
@@ -59,7 +53,6 @@ async function connectDB() {
     collection = database.collection('one'); // Tasks
     usersCollection = database.collection('users'); // Users
     offersCollection = database.collection('Offer'); // Offers
-    profileInfosCollection = database.collection('profileInfos'); // Profiles
     messagesCollection = database.collection('messages'); // Messages
     console.log('Connected to MongoDB');
   } catch (error) {
@@ -68,98 +61,62 @@ async function connectDB() {
 }
 connectDB();
 
-// Serve static files from the 'public' directory
+// Serve Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve the main HTML file for user setup
+// Root Route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Socket.IO chat events
+// Socket.IO Chat Events
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+  console.log('User connected:', socket.id);
 
-  // Join a room for private chat
+  // Handle Room Joining
   socket.on('joinRoom', ({ sender, receiver }) => {
-    const roomId = [sender, receiver].sort().join('-'); // Consistent room ID
+    const roomId = [sender, receiver].sort().join('-');
     socket.join(roomId);
     console.log(`User ${socket.id} joined room ${roomId}`);
   });
 
-  // Listen for incoming chat messages
+  // Handle New Chat Messages
   socket.on('chatMessage', async (messageData) => {
     const { sender, receiver, message } = messageData;
 
+    if (!sender || !receiver || !message) {
+      socket.emit('error', 'Invalid message data');
+      return;
+    }
+
     try {
-      // Validate messageData
-      if (!sender || !receiver || !message) {
-        socket.emit('error', 'Invalid message data');
-        return;
-      }
-
-      // Save the message to MongoDB
       const timestamp = new Date();
-      await messagesCollection.insertOne({
-        sender,
-        receiver,
-        message,
-        timestamp,
-      });
+      const newMessage = { sender, receiver, message, timestamp };
 
-      // Emit the message to the receiver's room
+      // Save message to MongoDB
+      await messagesCollection.insertOne(newMessage);
+
+      // Emit message to room
       const roomId = [sender, receiver].sort().join('-');
-      io.to(roomId).emit('newMessage', { sender, receiver, message, timestamp });
-
-      console.log(`Message sent from ${sender} to ${receiver}`);
+      io.to(roomId).emit('newMessage', newMessage);
+      console.log(`Message from ${sender} to ${receiver}: "${message}"`);
     } catch (error) {
       console.error('Error saving message:', error);
       socket.emit('error', 'Failed to save message');
     }
   });
 
-  // Handle disconnection
+  // Handle Disconnection
   socket.on('disconnect', () => {
-    console.log('A user disconnected:', socket.id);
+    console.log('User disconnected:', socket.id);
   });
 });
 
-app.post('/chatProvider', async (req, res) => {
-    const { title, currentUser } = req.body;
-
-    // Input Validation
-    if (!title || !currentUser) {
-        console.error("Missing Task ID or Current User");
-        return res.status(400).json({ message: 'Task ID and current user are required.' });
-    }
-
-    try {
-        // Query by ObjectId if taskId is an _id field in MongoDB
-        const task = await collection.findOne({ 
-            title : title ,
-            username: currentUser 
-        });
-
-        if (!task || !task.TaskProvider) {
-            console.error("Task or TaskProvider not found");
-            return res.status(404).json({ message: 'Task or TaskProvider not found.' });
-        }
-
-        console.log("Task Provider Found:", task.TaskProvider);
-        res.status(200).json({ TaskProvider: task.TaskProvider });
-    } catch (error) {
-        console.error('Error fetching TaskProvider:', error);
-        res.status(500).json({ message: 'Failed to fetch TaskProvider.' });
-    }
-});
-
-
-// API to fetch chat history between two users
+// Fetch Chat History API
 app.get('/chat/:sender/:receiver', async (req, res) => {
   const { sender, receiver } = req.params;
 
   try {
-    // Fetch messages from the MongoDB collection
     const messages = await messagesCollection
       .find({
         $or: [
@@ -167,15 +124,39 @@ app.get('/chat/:sender/:receiver', async (req, res) => {
           { sender: receiver, receiver: sender },
         ],
       })
-      .sort({ timestamp: 1 }) // Sort messages by timestamp in ascending order
+      .sort({ timestamp: 1 })
       .toArray();
 
-    // Send the fetched messages as a response
     res.status(200).json(messages);
   } catch (error) {
     console.error('Error fetching chat history:', error);
     res.status(500).json({ message: 'Failed to fetch chat history.' });
   }
+});
+
+// Fetch Task Provider API
+app.post('/chatProvider', async (req, res) => {
+  const { title, currentUser } = req.body;
+
+  if (!title || !currentUser) {
+    return res.status(400).json({ message: 'Task title and current user are required.' });
+  }
+
+  try {
+    const task = await collection.findOne({ title, username: currentUser });
+    if (!task || !task.TaskProvider) {
+      return res.status(404).json({ message: 'Task or Task Provider not found.' });
+    }
+    res.status(200).json({ TaskProvider: task.TaskProvider });
+  } catch (error) {
+    console.error('Error fetching TaskProvider:', error);
+    res.status(500).json({ message: 'Failed to fetch Task Provider.' });
+  }
+});
+
+// Start Server
+server.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });
 
 
