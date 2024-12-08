@@ -125,10 +125,10 @@ io.on('connection', (socket) => {
 });
 
 app.post('/chatProvider', async (req, res) => {
-    const { taskId, currentUser } = req.body;
+    const { title, currentUser } = req.body;
 
     // Input Validation
-    if (!taskId || !currentUser) {
+    if (!title || !currentUser) {
         console.error("Missing Task ID or Current User");
         return res.status(400).json({ message: 'Task ID and current user are required.' });
     }
@@ -136,7 +136,7 @@ app.post('/chatProvider', async (req, res) => {
     try {
         // Query by ObjectId if taskId is an _id field in MongoDB
         const task = await collection.findOne({ 
-            _id: new ObjectId(taskId), 
+            title : title ,
             username: currentUser 
         });
 
