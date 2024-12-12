@@ -89,7 +89,7 @@ io.on('connection', (socket) => {
 
   // Listen for incoming chat messages
   socket.on('chatMessage', async (messageData) => {
-    const { sender, receiver, message ,taskid} = messageData;
+    const { sender, receiver, message } = messageData;
 
     try {
       // Validate messageData
@@ -105,12 +105,11 @@ io.on('connection', (socket) => {
         receiver,
         message,
         timestamp,
-        taskid,
       });
 
       // Emit the message to the receiver's room
       const roomId = [sender, receiver].sort().join('-');
-      io.to(roomId).emit('newMessage', { sender, receiver, message, timestamp,taskid, });
+      io.to(roomId).emit('newMessage', { sender, receiver, message, timestamp });
 
       console.log(`Message sent from ${sender} to ${receiver}`);
     } catch (error) {
