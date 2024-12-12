@@ -155,16 +155,16 @@ app.post('/chatProvider', async (req, res) => {
 
 
 // API to fetch chat history between two users
-app.get('/chat/:sender/:receiver', async (req, res) => {
-  const { sender, receiver } = req.params;
+app.get('/chat/:sender/:receiver/:taskId', async (req, res) => {
+  const { sender, receiver ,taskId} = req.params;
 
   try {
     // Fetch messages from the MongoDB collection
     const messages = await messagesCollection
       .find({
         $or: [
-          { sender, receiver },
-          { sender: receiver, receiver: sender },
+          { sender, receiver ,tasId},
+          { sender: receiver, receiver: sender, taskid : taskId },
         ],
       })
       .sort({ timestamp: 1 }) // Sort messages by timestamp in ascending order
