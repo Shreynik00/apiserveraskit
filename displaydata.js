@@ -134,8 +134,8 @@ app.post('/api/user/profile', async (req, res) => {
 });
 
 // Route to fetch messages
-app.get('/chat/:sender/:receiver/:taskId', async (req, res) => {
-    const { sender, receiver, taskId } = req.params;
+app.get('/chat/:currentUser/:receiver/:taskId', async (req, res) => {
+    const { currnetUser, receiver, taskId } = req.params;
 
     try {
         const messages = await messagesCollection.find({
