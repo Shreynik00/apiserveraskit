@@ -151,34 +151,23 @@ app.get('/chat/:sender/:receiver/:taskId', async (req, res) => {
     }
 });
 
-// Send Message API
 app.post('/chat/send', async (req, res) => {
     const { sender, receiver, message, taskId, timestamp } = req.body;
 
-    if (!sender || !receiver || !message || !taskId || !timestamp) {
-        return res.status(400).json({ error: 'All fields are required' });
-    }
-
     try {
-        // Insert the message into the 'messages' collection
         const newMessage = {
             sender,
             receiver,
             message,
             taskId,
-            timestamp: new Date(timestamp), // Ensure the timestamp is in proper date format
+            timestamp
         };
 
-        const result = await messagesCollection.insertOne(newMessage);
-
-        if (result.insertedId) {
-            res.status(201).json({ success: true, message: 'Message sent successfully' });
-        } else {
-            res.status(500).json({ error: 'Failed to send message' });
-        }
+        await messagesCollection.insertOne(newMessage); // Insert message to DB
+        res.status(200).json({ success: true, message: 'Message sent successfully' });
     } catch (error) {
         console.error('Error sending message:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ success: false, error: 'Failed to send message' });
     }
 });
 
