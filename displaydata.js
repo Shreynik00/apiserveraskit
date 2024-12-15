@@ -5,9 +5,6 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 
-const http = require('http'); // Import HTTP to use with Socket.IO
-const { Server } = require('socket.io');
-
 
 const app = express();
 const port = 3000;
@@ -20,52 +17,50 @@ let collection, usersCollection, offersCollection, messagesCollection;
 
 // Middleware to parse JSON requests
 
-// Initialize Socket.IO
-const server = http.createServer(app);
-const io = require('socket.io')(server, {
-  cors: {
-    origin: 'https://shreynik00.github.io',
-    methods: ['GET', 'POST'],
-  },
-});
 
-// Middleware Setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  cors({
-    origin: 'https://shreynik00.github.io',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  })
-);
 
-// Session Configuration
-app.use(
-  session({
+
+app.use(cors({
+    origin: 'https://shreynik00.github.io',  // Allow your GitHub Pages site
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow specific HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
+    credentials: true  // Allow credentials if needed
+    
+}));
+
+// Handle preflight requests
+app.options('*', cors());
+
+
+// Session configuration
+
+
+app.use(session({
     secret: 'your-secret-key', // Replace with a secure secret
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true }, // Set secure:true if using HTTPS
-  })
-);
+    cookie: { secure: false, httpOnly: true } // Ensure secure cookies if using HTTPS
+}));
+
 
 // Connect to MongoDB once at the start
 async function connectDB() {
-  try {
-    await client.connect();
-    const database = client.db('Freelancer');
-    collection = database.collection('one'); // Tasks
-    usersCollection = database.collection('users'); // Users
-    offersCollection = database.collection('Offer'); // Offers
-    profileInfosCollection = database.collection('profileInfos'); // Profiles
-    messagesCollection = database.collection('messages'); // Messages
-    console.log('Connected to MongoDB');
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-  }
+    try {
+        await client.connect();
+        const database = client.db('Freelancer');
+        collection = database.collection('one'); // Tasks
+        usersCollection = database.collection('users'); // Users
+        offersCollection = database.collection('Offer'); // Offers
+        profileInfosCollection= database.collection('profileInfos'); // all profiles 
+        messagesCollection = database.collection('messages'); // Messages
+        console.log('Connected to MongoDB');
+    } catch (error) {
+        console.error('MongoDB connection error:', error);
+    }
 }
+
 connectDB();
 
 // Serve static files from the 'public' directory
@@ -73,182 +68,70 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve the main HTML file for user setup
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
-
-// Socket.IO chat events
-io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
-
-  // Join a room for private chat
-  socket.on('joinRoom', ({ sender, receiver }) => {
-    const roomId = [sender, receiver].sort().join('-'); // Consistent room ID
-    socket.join(roomId);
-    console.log(`User ${socket.id} joined room ${roomId}`);
-  });
-
-  // Listen for incoming chat messages
-  socket.on('chatMessage', async (messageData) => {
-    const { sender, receiver, message } = messageData;
-
-    try {
-      // Validate messageData
-      if (!sender || !receiver || !message) {
-        socket.emit('error', 'Invalid message data');
-        return;
-      }
-
-      // Save the message to MongoDB
-      const timestamp = new Date();
-      await messagesCollection.insertOne({
-        sender,
-        receiver,
-        message,
-        timestamp,
-      });
-
-      // Emit the message to the receiver's room
-      const roomId = [sender, receiver].sort().join('-');
-      io.to(roomId).emit('newMessage', { sender, receiver, message, timestamp });
-
-      console.log(`Message sent from ${sender} to ${receiver}`);
-    } catch (error) {
-      console.error('Error saving message:', error);
-      socket.emit('error', 'Failed to save message');
-    }
-  });
-
-  // Handle disconnection
-  socket.on('disconnect', () => {
-    console.log('A user disconnected:', socket.id);
-  });
-});
-
-app.post('/chatProvider', async (req, res) => {
-    const { title, currentUser } = req.body;
-
-    // Input Validation
-    if (!title || !currentUser) {
-        console.error("Missing Task ID or Current User");
-        return res.status(400).json({ message: 'Task ID and current user are required.' });
-    }
-
-    try {
-        // Query by ObjectId if taskId is an _id field in MongoDB
-        const task = await collection.findOne({ 
-            title : title ,
-            username: currentUser 
-        });
-
-        if (!task || !task.TaskProvider) {
-            console.error("Task or TaskProvider not found");
-            return res.status(404).json({ message: 'Task or TaskProvider not found.' });
-        }
-
-        console.log("Task Provider Found:", task.TaskProvider);
-        res.status(200).json({ TaskProvider: task.TaskProvider });
-    } catch (error) {
-        console.error('Error fetching TaskProvider:', error);
-        res.status(500).json({ message: 'Failed to fetch TaskProvider.' });
-    }
-});
-
-
-// API to fetch chat history between two users
-app.get('/chat/:sender/:receiver', async (req, res) => {
-  const { sender, receiver } = req.params;
-
-  try {
-    // Fetch messages from the MongoDB collection
-    const messages = await messagesCollection
-      .find({
-        $or: [
-          { sender, receiver },
-          { sender: receiver, receiver: sender },
-        ],
-      })
-      .sort({ timestamp: 1 }) // Sort messages by timestamp in ascending order
-      .toArray();
-
-    // Send the fetched messages as a response
-    res.status(200).json(messages);
-  } catch (error) {
-    console.error('Error fetching chat history:', error);
-    res.status(500).json({ message: 'Failed to fetch chat history.' });
-  }
-});
-
 
 // API to fetch current logged-in username from session
+// API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
-  if (req.session.user && req.session.user.username) {
-    res.json({ username: req.session.user.username });
-  } else {
-    res.status(401).json({ message: 'User not logged in.' });
-  }
+    if (req.session.user && req.session.user.username) {
+        res.json({ username: req.session.user.username });
+    } else {
+        res.status(401).json({ message: 'User not logged in.' });
+    }
 });
-
+// profile set up 
 // Profile setup API to update or insert profile data
 app.post('/api/user/profile', async (req, res) => {
-  const { username, about, skills } = req.body;
+    const { username, about,  skills} = req.body;
 
-  if (!username || !about || !skills) {
-    return res.status(400).json({ message: 'Invalid input data' });
-  }
-
-  try {
-    // Check if a profile already exists
-    const existingProfile = await profileInfosCollection.findOne({ username });
-
-    if (existingProfile) {
-      // Update existing profile
-      const result = await profileInfosCollection.updateOne(
-        { username },
-        {
-          $set: { about, skills },
-        }
-      );
-
-      if (result.matchedCount > 0) {
-        return res.status(200).json({ message: 'Profile updated successfully' });
-      } else {
-        return res.status(500).json({ message: 'Failed to update profile data' });
-      }
-    } else {
-      // Create a new profile
-      const newProfile = { username, about, skills };
-      await profileInfosCollection.insertOne(newProfile);
-
-      return res.status(201).json({ message: 'Profile created successfully' });
-    }
-  } catch (error) {
-    console.error('Error handling profile data:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.get('/messages', async (req, res) => {
-    const { currentUser, receiver } = req.query;
-
-    if (!currentUser || !receiver) {
-        return res.status(400).json({ error: "currentUser and receiver are required" });
+    // Validate required fields
+    if (!username || !about ||  !skills ) {
+        return res.status(400).json({ message: 'Invalid input data' });
     }
 
     try {
-        const messages = await MessageCollection.find({
-            $or: [
-                { sender: currentUser, receiver },
-                { sender: receiver, receiver: currentUser }
-            ]
-        }).sort({ timestamp: 1 }).exec();
+        // Check if a document with the provided username exists in 'profileInfos' collection
+        const existingProfile = await profileInfosCollection.findOne({ username });
 
-        res.json(messages);
+        if (existingProfile) {
+            // Update the existing profile
+            const result = await profileInfosCollection.updateOne(
+                { username },
+                {
+                    $set: {
+                        about,
+                        
+                        skills,
+                   
+                    },
+                }
+            );
+
+            if (result.matchedCount > 0) {
+                return res.status(200).json({ message: 'Profile updated successfully' });
+            } else {
+                return res.status(500).json({ message: 'Failed to update profile data' });
+            }
+        } else {
+            // Insert a new profile document
+            const newProfile = {
+                username,
+                about,
+               
+                skills,
+                
+            };
+
+            await profileInfosCollection.insertOne(newProfile);
+
+            return res.status(201).json({ message: 'Profile created successfully' });
+        }
     } catch (error) {
-        console.error("Error fetching messages:", error);
-        res.status(500).json({ error: "Internal server error" });
+        console.error('Error handling profile data:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 });
-
 
 // API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
@@ -345,35 +228,13 @@ app.post('/acceptedOffers', async (req, res) => {
     }
 
     try {
-        // Find tasks where 'TaskProvider' matches the provided 'username'
         const tasks = await collection.find({ TaskProvider: username }).toArray();
 
         if (!tasks.length) {
-            return res.status(404).json({ message: 'No tasks found for the given TaskProvider.' });
+            return res.status(404).json({ message: 'No tasks found for the given username.' });
         }
 
-        // This part ensures the existing functionality is not broken.
-        // We return the task details and add the username of the person accepting the task.
-        const tasksWithUsernames = tasks.map(task => {
-            return {
-                ...task,
-                username: task.username, // Include the username of the task owner (the person who accepted the task)
-                taskDetails: {
-                    title: task.title,
-                    detail: task.detail,
-                    deadline: task.deadline,
-                    budget: task.budget,
-                    status: task.status,
-                    mode: task.mode,
-                    urgencyType: task.urgencyType,
-                    paymentMethod: task.paymentMethod,
-                    requirements: task.requirements,
-                    type: task.type
-                }
-            };
-        });
-
-        res.status(200).json(tasksWithUsernames);
+        res.status(200).json(tasks);
     } catch (error) {
         console.error('Error fetching accepted offers:', error);
         res.status(500).json({ message: 'Failed to fetch accepted offers.' });
@@ -564,6 +425,6 @@ app.post('/add-task', async (req, res) => {
 
 
 // Start the server
-server.listen(port, () => {
+app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
