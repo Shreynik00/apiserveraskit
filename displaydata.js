@@ -274,23 +274,28 @@ app.post('/acceptOffer', async (req, res) => {
 app.post('/acceptedOffers', async (req, res) => {
     const { username } = req.body;
 
+    // Check if the username is provided in the request body
     if (!username) {
         return res.status(400).json({ message: 'Username is required.' });
     }
 
     try {
+        // Fetch tasks where TaskProvider matches the provided username
         const tasks = await collection.find({ TaskProvider: username }).toArray();
 
-        if (!tasks.length) {
+        // If no tasks are found, return a 404 error
+        if (tasks.length === 0) {
             return res.status(404).json({ message: 'No tasks found for the given username.' });
         }
 
+        // If tasks are found, return them as a JSON response
         res.status(200).json(tasks);
     } catch (error) {
         console.error('Error fetching accepted offers:', error);
         res.status(500).json({ message: 'Failed to fetch accepted offers.' });
     }
 });
+
 
 
 
