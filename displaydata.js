@@ -133,6 +133,57 @@ app.post('/api/user/profile', async (req, res) => {
     }
 });
 
+// Fetch Messages API
+app.get('/chat/:sender/:receiver/:taskId', async (req, res) => {
+    const { sender, receiver, taskId } = req.params;
+
+    try {
+        // Fetch all messages that belong to this taskId from the messages collection
+        const messages = await messagesCollection.find({ taskId })
+            .sort({ timestamp: 1 }) // Sort messages by timestamp in ascending order
+            .toArray(); // Convert to array
+
+        // Return the messages as a response
+        res.json(messages); // You can format this further if needed
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+});
+
+// Send Message API
+app.post('/chat/send', async (req, res) => {
+    const { sender, receiver, message, taskId, timestamp } = req.body;
+
+    if (!sender || !receiver || !message || !taskId || !timestamp) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    try {
+        // Insert the message into the 'messages' collection
+        const newMessage = {
+            sender,
+            receiver,
+            message,
+            taskId,
+            timestamp: new Date(timestamp), // Ensure the timestamp is in proper date format
+        };
+
+        const result = await messagesCollection.insertOne(newMessage);
+
+        if (result.insertedId) {
+            res.status(201).json({ success: true, message: 'Message sent successfully' });
+        } else {
+            res.status(500).json({ error: 'Failed to send message' });
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
 // API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
     if (req.session.user && req.session.user.username) {
