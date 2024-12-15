@@ -81,19 +81,19 @@ io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
   // Join a room for private chat
-  socket.on('joinRoom', ({ sender, receiver, taskId }) => {
-    const roomId = [sender, receiver, taskId].join('-'); // Room ID includes taskId for unique identification
+  socket.on('joinRoom', ({ sender, receiver }) => {
+    const roomId = [sender, receiver].sort().join('-'); // Consistent room ID
     socket.join(roomId);
     console.log(`User ${socket.id} joined room ${roomId}`);
   });
 
   // Listen for incoming chat messages
   socket.on('chatMessage', async (messageData) => {
-    const { sender, receiver, message, taskId } = messageData;
+    const { sender, receiver, message } = messageData;
 
     try {
       // Validate messageData
-      if (!sender || !receiver || !message || !taskId) {
+      if (!sender || !receiver || !message) {
         socket.emit('error', 'Invalid message data');
         return;
       }
@@ -104,15 +104,14 @@ io.on('connection', (socket) => {
         sender,
         receiver,
         message,
-        taskId,
         timestamp,
       });
 
       // Emit the message to the receiver's room
-      const roomId = [sender, receiver, taskId].join('-');
-      io.to(roomId).emit('newMessage', { sender, receiver, message, taskId, timestamp });
+      const roomId = [sender, receiver].sort().join('-');
+      io.to(roomId).emit('newMessage', { sender, receiver, message, timestamp });
 
-      console.log(`Message sent from ${sender} to ${receiver} for task ${taskId}`);
+      console.log(`Message sent from ${sender} to ${receiver}`);
     } catch (error) {
       console.error('Error saving message:', error);
       socket.emit('error', 'Failed to save message');
@@ -125,15 +124,44 @@ io.on('connection', (socket) => {
   });
 });
 
-// API to fetch chat history for a specific task
-app.get('/chat/:sender/:receiver/:taskId', async (req, res) => {
-  const { sender, receiver, taskId } = req.params;
+app.post('/chatProvider', async (req, res) => {
+    const { title, currentUser } = req.body;
+
+    // Input Validation
+    if (!title || !currentUser) {
+        console.error("Missing Task ID or Current User");
+        return res.status(400).json({ message: 'Task ID and current user are required.' });
+    }
+
+    try {
+        // Query by ObjectId if taskId is an _id field in MongoDB
+        const task = await collection.findOne({ 
+            title : title ,
+            username: currentUser 
+        });
+
+        if (!task || !task.TaskProvider) {
+            console.error("Task or TaskProvider not found");
+            return res.status(404).json({ message: 'Task or TaskProvider not found.' });
+        }
+
+        console.log("Task Provider Found:", task.TaskProvider);
+        res.status(200).json({ TaskProvider: task.TaskProvider });
+    } catch (error) {
+        console.error('Error fetching TaskProvider:', error);
+        res.status(500).json({ message: 'Failed to fetch TaskProvider.' });
+    }
+});
+
+
+// API to fetch chat history between two users
+app.get('/chat/:sender/:receiver', async (req, res) => {
+  const { sender, receiver } = req.params;
 
   try {
     // Fetch messages from the MongoDB collection
     const messages = await messagesCollection
       .find({
-        taskId,
         $or: [
           { sender, receiver },
           { sender: receiver, receiver: sender },
@@ -149,7 +177,6 @@ app.get('/chat/:sender/:receiver/:taskId', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch chat history.' });
   }
 });
-
 
 
 // API to fetch current logged-in username from session
