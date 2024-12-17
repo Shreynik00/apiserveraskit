@@ -5,45 +5,35 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 
-
 const app = express();
 const port = 3000;
-
 
 // Connection URI for MongoDB
 const uri = 'mongodb+srv://Shreynik:Dinku2005@cluster0.xh7s8.mongodb.net/';
 const client = new MongoClient(uri);
-let collection, usersCollection, offersCollection, messagesCollection;
+let collection, usersCollection, offersCollection, messagesCollection, profileInfosCollection;
 
 // Middleware to parse JSON requests
-
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 
 app.use(cors({
     origin: 'https://shreynik00.github.io',  // Allow your GitHub Pages site
     methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow specific HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
     credentials: true  // Allow credentials if needed
-    
 }));
 
 // Handle preflight requests
 app.options('*', cors());
 
-
 // Session configuration
-
-
 app.use(session({
     secret: 'your-secret-key', // Replace with a secure secret
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false, httpOnly: true } // Ensure secure cookies if using HTTPS
 }));
-
 
 // Connect to MongoDB once at the start
 async function connectDB() {
@@ -53,11 +43,12 @@ async function connectDB() {
         collection = database.collection('one'); // Tasks
         usersCollection = database.collection('users'); // Users
         offersCollection = database.collection('Offer'); // Offers
-        profileInfosCollection= database.collection('profileInfos'); // all profiles 
+        profileInfosCollection = database.collection('profileInfos'); // all profiles
         messagesCollection = database.collection('messages'); // Messages
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('MongoDB connection error:', error);
+        process.exit(1);  // Exit the process if DB connection fails
     }
 }
 
@@ -72,7 +63,6 @@ app.get('/', (req, res) => {
 });
 
 // API to fetch current logged-in username from session
-// API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
     if (req.session.user && req.session.user.username) {
         res.json({ username: req.session.user.username });
@@ -80,13 +70,13 @@ app.get('/current-username', (req, res) => {
         res.status(401).json({ message: 'User not logged in.' });
     }
 });
-// profile set up 
+
 // Profile setup API to update or insert profile data
 app.post('/api/user/profile', async (req, res) => {
-    const { username, about,  skills} = req.body;
+    const { username, about, skills } = req.body;
 
     // Validate required fields
-    if (!username || !about ||  !skills ) {
+    if (!username || !about || !skills) {
         return res.status(400).json({ message: 'Invalid input data' });
     }
 
@@ -101,9 +91,7 @@ app.post('/api/user/profile', async (req, res) => {
                 {
                     $set: {
                         about,
-                        
                         skills,
-                   
                     },
                 }
             );
@@ -118,9 +106,7 @@ app.post('/api/user/profile', async (req, res) => {
             const newProfile = {
                 username,
                 about,
-               
                 skills,
-                
             };
 
             await profileInfosCollection.insertOne(newProfile);
@@ -135,14 +121,14 @@ app.post('/api/user/profile', async (req, res) => {
 
 // Route to fetch messages
 app.get('/chat/:currentUser/:receiver/:taskId', async (req, res) => {
-    const { currnetUser, receiver, taskId } = req.params;
+    const { currentUser, receiver, taskId } = req.params;
 
     try {
         const messages = await messagesCollection.find({
             taskId,
             $or: [
-                { sender, receiver },
-                { sender: receiver, receiver: sender }
+                { sender: currentUser, receiver },
+                { sender: receiver, receiver: currentUser }
             ]
         }).toArray();
 
@@ -182,6 +168,9 @@ app.post('/chat/send', async (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to send message' });
     }
 });
+
+
+
 
 // API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
