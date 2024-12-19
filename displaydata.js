@@ -120,8 +120,8 @@ app.post('/api/user/profile', async (req, res) => {
 });
 
 // Route to fetch messages
-app.get('/chat/:currentUser/:receiver/:taskId', async (req, res) => {
-    const { currentUser, receiver, taskId } = req.params;
+app.get('/chat/:taskId', async (req, res) => {
+    const {  taskId } = req.params;
 
 try {
     const messages = await messagesCollection.find({
