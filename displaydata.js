@@ -123,21 +123,17 @@ app.post('/api/user/profile', async (req, res) => {
 app.get('/chat/:currentUser/:receiver/:taskId', async (req, res) => {
     const { currentUser, receiver, taskId } = req.params;
 
-    try {
-        const messages = await messagesCollection.find({
-            taskId,
-            $or: [
-                { sender: currentUser},
-                { sender: receiver }
-            ]
-        }).toArray();
+try {
+    const messages = await messagesCollection.find({
+        taskId,  // Ensure taskId matches
+   
+    }).sort({ timestamp: 1 }).toArray();  // Sort by timestamp in descending order
 
-        if (!messages || messages.length === 0) {
-            return res.status(200).json([]);  // Return empty array if no messages found
-        }
+    return res.status(200).json(messages);  // Return messages, even if empty
+}
 
-        res.status(200).json(messages);  // Send messages as JSON
-    } catch (error) {
+    
+     catch (error) {
         console.error('Error fetching messages:', error);
         res.status(500).json({ message: 'Failed to fetch messages' });
     }
