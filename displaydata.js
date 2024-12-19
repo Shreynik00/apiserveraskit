@@ -127,8 +127,8 @@ app.get('/chat/:currentUser/:receiver/:taskId', async (req, res) => {
         const messages = await messagesCollection.find({
             taskId,
             $or: [
-                { sender: currentUser, receiver },
-                { sender: receiver, receiver: currentUser }
+                { sender: currentUser},
+                { sender: receiver }
             ]
         }).toArray();
 
