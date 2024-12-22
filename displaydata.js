@@ -212,7 +212,8 @@ app.get('/current-username', (req, res) => {
 
 
 // Delete Task API
-app.delete('/deleteTask', async (req, res) => {
+
+app.put('/deleteTask', async (req, res) => {
     const { taskId } = req.body;
 
     if (!taskId) {
@@ -220,17 +221,23 @@ app.delete('/deleteTask', async (req, res) => {
     }
 
     try {
-        // Delete the task from the "one" collection
-        const deleteResult = await collection.deleteOne({ _id: new ObjectId(taskId) });
+        const updateResult = await collection.updateOne(
+            { _id: new ObjectId(taskId) },
+            { $set: { isdeleted: true } }
+        );
 
-        if (deleteResult.deletedCount === 0) {
+        if (updateResult.matchedCount === 0) {
             return res.status(404).json({ message: 'Task not found.' });
         }
 
-        res.status(200).json({ message: 'Task deleted successfully.' });
+        if (updateResult.modifiedCount === 1) {
+            res.json({ message: 'Task marked as completed successfully.' });
+        } else {
+            res.status(500).json({ message: 'Failed to update the task.' });
+        }
     } catch (error) {
-        console.error('Error deleting task:', error);
-        res.status(500).json({ message: 'Failed to delete task.' });
+        console.error('Error marking task as completed:', error);
+        res.status(500).json({ message: 'Internal server error.' });
     }
 });
 
