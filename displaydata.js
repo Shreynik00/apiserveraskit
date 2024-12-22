@@ -73,7 +73,7 @@ app.get('/current-username', (req, res) => {
 
 // to complete task from  task requester side 
 // API to mark a task as completed by setting RequesterEndedTask to true
-app.put('/completeTask', async (req, res) => {
+app.post('/completeTask', async (req, res) => {
     const { taskId } = req.body;
 
     if (!taskId) {
@@ -213,7 +213,7 @@ app.get('/current-username', (req, res) => {
 
 // Delete Task API
 
-app.put('/deleteTask', async (req, res) => {
+app.post('/deleteTask', async (req, res) => {
     const { taskId } = req.body;
 
     if (!taskId) {
