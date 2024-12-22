@@ -71,6 +71,37 @@ app.get('/current-username', (req, res) => {
     }
 });
 
+// to complete task from  task requester side 
+// API to mark a task as completed by setting RequesterEndedTask to true
+app.put('/completeTask', async (req, res) => {
+    const { taskId } = req.body;
+
+    if (!taskId) {
+        return res.status(400).json({ message: 'Task ID is required.' });
+    }
+
+    try {
+        const updateResult = await collection.updateOne(
+            { _id: new ObjectId(taskId) },
+            { $set: { RequesterEndedTask: true } }
+        );
+
+        if (updateResult.matchedCount === 0) {
+            return res.status(404).json({ message: 'Task not found.' });
+        }
+
+        if (updateResult.modifiedCount === 1) {
+            res.json({ message: 'Task marked as completed successfully.' });
+        } else {
+            res.status(500).json({ message: 'Failed to update the task.' });
+        }
+    } catch (error) {
+        console.error('Error marking task as completed:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+});
+
+
 // Profile setup API to update or insert profile data
 app.post('/api/user/profile', async (req, res) => {
     const { username, about, skills } = req.body;
