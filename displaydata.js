@@ -102,7 +102,36 @@ app.post('/completeTask', async (req, res) => {
     }
 });
 
+// to complete task from  task provider side 
 
+app.post('/completeTaskProvider', async (req, res) => {
+    const { taskId } = req.body;
+
+    if (!taskId) {
+        return res.status(400).json({ message: 'Task ID is required.' });
+    }
+
+    try {
+        // Find the task by the provided taskId and update the RequesterEndedTask field
+        const updateResult = await collection.updateOne(
+            { _id: new ObjectId(taskId) }, // Match by taskId
+            { $set: { ProviderEndedTask:" true" } } // Update only RequesterEndedTask field
+        );
+
+        if (updateResult.matchedCount === 0) {
+            return res.status(404).json({ message: 'Task not found.' });
+        }
+
+        if (updateResult.modifiedCount === 1) {
+            res.json({ message: 'Task marked as completed successfully.' });
+        } else {
+            res.status(500).json({ message: 'Failed to update the task.' });
+        }
+    } catch (error) {
+        console.error('Error marking task as completed:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+});
 
 // Profile setup API to update or insert profile data
 app.post('/api/user/profile', async (req, res) => {
