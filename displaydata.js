@@ -84,7 +84,7 @@ app.post('/completeTask', async (req, res) => {
         // Find the task by the provided taskId and update the RequesterEndedTask field
         const updateResult = await collection.updateOne(
             { _id: new ObjectId(taskId) }, // Match by taskId
-            { $set: { RequesterEndedTask: true } } // Update only RequesterEndedTask field
+            { $set: { RequesterEndedTask:" true" } } // Update only RequesterEndedTask field
         );
 
         if (updateResult.matchedCount === 0) {
