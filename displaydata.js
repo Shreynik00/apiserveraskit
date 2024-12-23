@@ -81,9 +81,10 @@ app.post('/completeTask', async (req, res) => {
     }
 
     try {
+        // Find the task by the provided taskId and update the RequesterEndedTask field
         const updateResult = await collection.updateOne(
-            { _id: new ObjectId(taskId) },
-            { $set: { RequesterEndedTask: true } }
+            { _id: new ObjectId(taskId) }, // Match by taskId
+            { $set: { RequesterEndedTask: true } } // Update only RequesterEndedTask field
         );
 
         if (updateResult.matchedCount === 0) {
@@ -100,6 +101,7 @@ app.post('/completeTask', async (req, res) => {
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
+
 
 
 // Profile setup API to update or insert profile data
