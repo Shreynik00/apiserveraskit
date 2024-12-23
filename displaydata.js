@@ -225,7 +225,7 @@ app.post('/deleteTask', async (req, res) => {
     try {
         const updateResult = await collection.updateOne(
             { _id: new ObjectId(taskId) },
-            { $set: { isdeleted: true } }
+            { $set: { isdeleted: "true" } }
         );
 
         if (updateResult.matchedCount === 0) {
