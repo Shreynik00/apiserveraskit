@@ -45,6 +45,7 @@ async function connectDB() {
         offersCollection = database.collection('Offer'); // Offers
         profileInfosCollection = database.collection('profileInfos'); // all profiles
         messagesCollection = database.collection('messages'); // Messages
+          questionsCollection = database.collection('questions'; // FAQ
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('MongoDB connection error:', error);
@@ -200,6 +201,48 @@ app.get('/chat/:taskId', async (req, res) => {
     }
 });
 
+app.get('/question/:taskId', async (req, res) => {
+    const { taskId } = req.params;
+
+    try {
+        const messages = await questionsCollection.find({ taskId }).toArray();
+
+        if (!messages) {
+            return res.status(200).json([]); // Return empty array if no messages found
+        }
+
+        res.status(200).json(messages); // Send messages as JSON
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        res.status(500).json({ message: 'Failed to fetch messages' });
+    }
+});
+
+// Route to send messages (POST)
+app.post('/question/send', async (req, res) => {
+    const { sender, receiver, message, taskId, timestamp } = req.body;
+
+    if (!sender || !receiver || !message || !taskId || !timestamp) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    try {
+        const newMessage = {
+            sender,
+            receiver,
+            message,
+            taskId,
+            timestamp
+        };
+
+        await questionsCollection.insertOne(newMessage);  // Insert the new message into the database
+
+        res.status(200).json({ success: true, message: 'Message sent successfully' });
+    } catch (error) {
+        console.error('Error sending message:', error);
+        res.status(500).json({ success: false, error: 'Failed to send message' });
+    }
+});
 
 
 
