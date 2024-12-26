@@ -45,7 +45,7 @@ async function connectDB() {
         offersCollection = database.collection('Offer'); // Offers
         profileInfosCollection = database.collection('profileInfos'); // all profiles
         messagesCollection = database.collection('messages'); // Messages
-          questionsCollection = database.collection('questions'); // FAQ
+          questionsCollection = database.collection('question'); // FAQ
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('MongoDB connection error:', error);
