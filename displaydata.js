@@ -134,6 +134,28 @@ app.post('/completeTaskProvider', async (req, res) => {
     }
 });
 
+app.get('/task-username/:taskId', async (req, res) => {
+    const { taskId } = req.params;
+
+    if (!taskId) {
+        return res.status(400).json({ message: 'Task ID is required.' });
+    }
+
+    try {
+        const task = await collection.findOne({ _id: new ObjectId(taskId) });
+
+        if (!task) {
+            return res.status(404).json({ message: 'Task not found.' });
+        }
+
+        res.json({ username: task.username }); // Assuming the task document contains a 'username' field
+    } catch (error) {
+        console.error('Error fetching task username:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+});
+
+
 // Profile setup API to update or insert profile data
 app.post('/api/user/profile', async (req, res) => {
     const { username, about, skills } = req.body;
