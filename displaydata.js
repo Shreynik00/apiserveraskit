@@ -26,6 +26,17 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
     credentials: true  // Allow credentials if needed
 }));
+// Additional Headers for Google Auth and Cross-Origin Policies
+app.use((req, res, next) => {
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+    res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+    res.setHeader("Access-Control-Allow-Origin", "https://askitindia.github.io");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    next();
+});
+
 
 // Handle preflight requests
 app.options('*', cors());
