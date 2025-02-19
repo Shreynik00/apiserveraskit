@@ -104,25 +104,35 @@ app.post('/google-login', async (req, res) => {
 });
 
 // Google Login Route
-app.post("/auth/google", async (req, res) => {
-    const { googleId, email, username } = req.body;
-
+app.post('/auth/google', async (req, res) => {
     try {
-        // Check if user exists in the database
-        let user = await User.findOne({ googleId });
-
-        if (!user) {
-            // If user does not exist, register them automatically
-            user = new User({ googleId, email, username });
-            await user.save();
+        const { googleId, email, username } = req.body;
+        
+        if (!googleId || !email) {
+            return res.status(400).json({ success: false, message: "Invalid Google credentials" });
         }
 
-        // Return user details as a successful login response
-        res.json({ success: true, user });
-    } catch (err) {
+        console.log("Received Google Sign-In Data:", req.body); // Debugging line
+
+        // Check if user exists in MongoDB
+        const user = await User.findOne({ googleId });
+
+        if (!user) {
+            // Create a new user if not found
+            const newUser = new User({ googleId, email, username });
+            await newUser.save();
+            return res.json({ success: true, message: "New Google User Registered", user: newUser });
+        }
+
+        // User exists, login successful
+        res.json({ success: true, message: "Google Login Successful", user });
+
+    } catch (error) {
+        console.error("Error during Google authentication:", error);
         res.status(500).json({ success: false, message: "Server error" });
     }
 });
+
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
