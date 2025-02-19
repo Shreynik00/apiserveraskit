@@ -92,6 +92,27 @@ app.post('/google-login', async (req, res) => {
         res.status(401).json({ success: false, error: "Invalid token" });
     }
 });
+
+// Google Login Route
+app.post("/auth/google", async (req, res) => {
+    const { googleId, email, username } = req.body;
+
+    try {
+        // Check if user exists in the database
+        let user = await User.findOne({ googleId });
+
+        if (!user) {
+            // If user does not exist, register them automatically
+            user = new User({ googleId, email, username });
+            await user.save();
+        }
+
+        // Return user details as a successful login response
+        res.json({ success: true, user });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
