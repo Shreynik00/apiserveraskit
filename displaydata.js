@@ -10,7 +10,7 @@ const app = express();
 const port = 3000;
 
 // Connection URI for MongoDB
-const client = new OAuth2Client("190022392096-gd9ehpmcvfonm496ip6p5ane43q4g4ce.apps.googleusercontent.com");
+const clientt = new OAuth2Client("190022392096-gd9ehpmcvfonm496ip6p5ane43q4g4ce.apps.googleusercontent.com");
 
 const uri = 'mongodb+srv://Shreynik:Dinku2005@cluster0.xh7s8.mongodb.net/';
 const client = new MongoClient(uri);
@@ -63,7 +63,7 @@ app.post('/google-login', async (req, res) => {
     const { token } = req.body;
 
     try {
-        const ticket = await client.verifyIdToken({
+        const ticket = await clientt.verifyIdToken({
             idToken: token,
             audience: "YOUR_GOOGLE_CLIENT_ID",
         });
