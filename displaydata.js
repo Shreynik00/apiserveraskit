@@ -73,7 +73,7 @@ app.post('/google-login', async (req, res) => {
             googleId: payload.sub,
             name: payload.name,
             email: payload.email,
-            picture: payload.picture
+          
         };
 
         // Check if user exists in DB
