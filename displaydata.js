@@ -81,7 +81,7 @@ app.post('/google-login', async (req, res) => {
 
         if (!existingUser) {
             // If user does not exist, insert them into MongoDB
-            await usersCollection.insertOne(user);
+            const result = await usersCollection.insertOne(user);
             existingUser = user;
         }
 
