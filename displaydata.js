@@ -72,7 +72,7 @@ app.post('/google-login', async (req, res) => {
         const payload = ticket.getPayload();
         const user = {
             googleId: payload.sub,
-            name: payload.name,
+            username: payload.name,
             email: payload.email,
           
         };
