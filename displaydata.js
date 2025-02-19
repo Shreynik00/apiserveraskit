@@ -3,12 +3,15 @@ const { MongoClient, ObjectId } = require('mongodb');
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
+onst { OAuth2Client } = require('google-auth-library');
 const cors = require('cors');
 
 const app = express();
 const port = 3000;
 
 // Connection URI for MongoDB
+const client = new OAuth2Client("YOUR_GOOGLE_CLIENT_ID");
+
 const uri = 'mongodb+srv://Shreynik:Dinku2005@cluster0.xh7s8.mongodb.net/';
 const client = new MongoClient(uri);
 let collection, usersCollection, offersCollection, messagesCollection, profileInfosCollection;
@@ -55,6 +58,39 @@ async function connectDB() {
 
 connectDB();
 
+//google sign up 
+app.post('/google-login', async (req, res) => {
+    const { token } = req.body;
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: "YOUR_GOOGLE_CLIENT_ID",
+        });
+
+        const payload = ticket.getPayload();
+        const user = {
+            googleId: payload.sub,
+            name: payload.name,
+            email: payload.email,
+            picture: payload.picture
+        };
+
+        // Check if user exists in DB
+        let existingUser = await usersCollection.findOne({ googleId: user.googleId });
+
+        if (!existingUser) {
+            // If user does not exist, insert them into MongoDB
+            await usersCollection.insertOne(user);
+            existingUser = user;
+        }
+
+        res.json({ success: true, user: existingUser });
+    } catch (error) {
+        console.error("Google login error:", error);
+        res.status(401).json({ success: false, error: "Invalid token" });
+    }
+});
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
