@@ -21,7 +21,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
-    origin: 'https://askitindia.github.io/Askit',  // Allow your GitHub Pages site
+    origin: 'https://askitindia.github.io',  // Allow your GitHub Pages site
     methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow specific HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
     credentials: true  // Allow credentials if needed
@@ -64,9 +64,10 @@ app.post('/google-login', async (req, res) => {
 
     try {
         const ticket = await clientt.verifyIdToken({
-            idToken: token,
-            audience: "190022392096-gd9ehpmcvfonm496ip6p5ane43q4g4ce.apps.googleusercontent.com",
-        });
+    idToken: token,
+    audience: process.env.GOOGLE_CLIENT_ID || "190022392096-gd9ehpmcvfonm496ip6p5ane43q4g4ce.apps.googleusercontent.com",
+});
+
 
         const payload = ticket.getPayload();
         const user = {
