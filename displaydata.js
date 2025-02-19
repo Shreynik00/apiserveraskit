@@ -65,7 +65,7 @@ app.post('/google-login', async (req, res) => {
     try {
         const ticket = await clientt.verifyIdToken({
             idToken: token,
-            audience: "YOUR_GOOGLE_CLIENT_ID",
+            audience: "190022392096-gd9ehpmcvfonm496ip6p5ane43q4g4ce.apps.googleusercontent.com",
         });
 
         const payload = ticket.getPayload();
