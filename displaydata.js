@@ -27,12 +27,12 @@ app.use(cors({
     credentials: true  // Allow credentials if needed
 }));
 // Additional Headers for Google Auth and Cross-Origin Policies
-app.use((req, res, next) => {
-    res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");  // Allow Google OAuth
-    res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");  // Less restrictive
-    next();
-});
-
+app.use(session({
+    secret: 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false, httpOnly: true }
+}));
 
 
 // Handle preflight requests
