@@ -113,12 +113,12 @@ app.post('/auth/google', async (req, res) => {
         console.log("Received Google Sign-In Data:", req.body); // Debugging line
 
         // Check if user exists in MongoDB
-        const user = await User.findOne({ googleId });
+        const user = await usersCollection.findOne({ googleId });
 
         if (!user) {
             // Create a new user if not found
-            const newUser = new User({ googleId, email, username });
-            await newUser.save();
+            const newUser = { googleId, email, username };
+            await usersCollection.insertOne(newUser);
             return res.json({ success: true, message: "New Google User Registered", user: newUser });
         }
 
@@ -130,6 +130,7 @@ app.post('/auth/google', async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 });
+
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
