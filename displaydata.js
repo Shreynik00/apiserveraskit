@@ -26,19 +26,10 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
     credentials: true  // Allow credentials if needed
 }));
-// Additional Headers for Google Auth and Cross-Origin Policies
-app.use(session({
-    secret: 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true }
-}));
 
 
 // Handle preflight requests
 app.options('*', cors());
-
-// Session configuration
 app.use(session({
     secret: 'your-secret-key', // Replace with a secure secret
     resave: false,
