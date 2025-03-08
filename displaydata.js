@@ -202,6 +202,24 @@ app.post('/completeTaskProvider', async (req, res) => {
     }
 });
 
+app.post('/register', async (req, res) => {
+    const { username, email, password } = req.body;
+    try {
+        const existingUser = await usersCollection.findOne({ username });
+        if (existingUser) {
+            return res.json({ message: 'Username already exists.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await usersCollection.insertOne({ username, email, password: hashedPassword });
+
+        res.json({ message: 'User registered successfully.' });
+    } catch (error) {
+        console.error('Error registering user:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+});
+
 app.get('/task-username/:taskId', async (req, res) => {
     const { taskId } = req.params;
 
