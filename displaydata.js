@@ -8,54 +8,50 @@ const cors = require('cors');
 
 const app = express();
 const port = 3000;
-
-// Connection URI for MongoDB
 const clientt = new OAuth2Client("190022392096-gd9ehpmcvfonm496ip6p5ane43q4g4ce.apps.googleusercontent.com");
-
 const uri = 'mongodb+srv://Shreynik:Dinku2005@cluster0.xh7s8.mongodb.net/';
 const client = new MongoClient(uri);
-let collection, usersCollection, offersCollection, messagesCollection, profileInfosCollection;
 
-// Middleware to parse JSON requests
+let collection, usersCollection, offersCollection, messagesCollection, profileInfosCollection, questionsCollection;
+
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use(cors({
-    origin: 'https://askitindia.github.io',  // Allow your GitHub Pages site
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow specific HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
-    credentials: true  // Allow credentials if needed
+    origin: 'https://askitindia.github.io',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }));
 
-
-// Handle preflight requests
 app.options('*', cors());
+
 app.use(session({
-    secret: 'your-secret-key', // Replace with a secure secret
+    secret: 'your-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true } // Ensure secure cookies if using HTTPS
+    cookie: { secure: false, httpOnly: true }
 }));
 
-// Connect to MongoDB once at the start
+// Connect to MongoDB
 async function connectDB() {
     try {
         await client.connect();
         const database = client.db('Freelancer');
-        collection = database.collection('one'); // Tasks
-        usersCollection = database.collection('users'); // Users
-        offersCollection = database.collection('Offer'); // Offers
-        profileInfosCollection = database.collection('profileInfos'); // all profiles
-        messagesCollection = database.collection('messages'); // Messages
-          questionsCollection = database.collection('question'); // FAQ
+        collection = database.collection('one');
+        usersCollection = database.collection('users');
+        offersCollection = database.collection('Offer');
+        profileInfosCollection = database.collection('profileInfos');
+        messagesCollection = database.collection('messages');
+        questionsCollection = database.collection('question');
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('MongoDB connection error:', error);
-        process.exit(1);  // Exit the process if DB connection fails
+        process.exit(1);
     }
 }
-
 connectDB();
+
 
 //google sign up 
 app.post('/google-login', async (req, res) => {
