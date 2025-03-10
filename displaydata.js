@@ -8,50 +8,54 @@ const cors = require('cors');
 
 const app = express();
 const port = 3000;
+
+// Connection URI for MongoDB
 const clientt = new OAuth2Client("190022392096-gd9ehpmcvfonm496ip6p5ane43q4g4ce.apps.googleusercontent.com");
+
 const uri = 'mongodb+srv://Shreynik:Dinku2005@cluster0.xh7s8.mongodb.net/';
 const client = new MongoClient(uri);
+let collection, usersCollection, offersCollection, messagesCollection, profileInfosCollection;
 
-let collection, usersCollection, offersCollection, messagesCollection, profileInfosCollection, questionsCollection;
-
-// Middleware
+// Middleware to parse JSON requests
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use(cors({
-    origin: 'https://askitindia.github.io',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    origin: 'https://askitindia.github.io',  // Allow your GitHub Pages site
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow specific HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
+    credentials: true  // Allow credentials if needed
 }));
 
-app.options('*', cors());
 
+// Handle preflight requests
+app.options('*', cors());
 app.use(session({
-    secret: 'your-secret-key',
+    secret: 'your-secret-key', // Replace with a secure secret
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true }
+    cookie: { secure: false, httpOnly: true } // Ensure secure cookies if using HTTPS
 }));
 
-// Connect to MongoDB
+// Connect to MongoDB once at the start
 async function connectDB() {
     try {
         await client.connect();
         const database = client.db('Freelancer');
-        collection = database.collection('one');
-        usersCollection = database.collection('users');
-        offersCollection = database.collection('Offer');
-        profileInfosCollection = database.collection('profileInfos');
-        messagesCollection = database.collection('messages');
-        questionsCollection = database.collection('question');
+        collection = database.collection('one'); // Tasks
+        usersCollection = database.collection('users'); // Users
+        offersCollection = database.collection('Offer'); // Offers
+        profileInfosCollection = database.collection('profileInfos'); // all profiles
+        messagesCollection = database.collection('messages'); // Messages
+          questionsCollection = database.collection('question'); // FAQ
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('MongoDB connection error:', error);
-        process.exit(1);
+        process.exit(1);  // Exit the process if DB connection fails
     }
 }
-connectDB();
 
+connectDB();
 
 //google sign up 
 app.post('/google-login', async (req, res) => {
@@ -194,24 +198,6 @@ app.post('/completeTaskProvider', async (req, res) => {
         }
     } catch (error) {
         console.error('Error marking task as completed:', error);
-        res.status(500).json({ message: 'Internal server error.' });
-    }
-});
-
-app.post('/register', async (req, res) => {
-    const { username, email, password } = req.body;
-    try {
-        const existingUser = await usersCollection.findOne({ username });
-        if (existingUser) {
-            return res.json({ message: 'Username already exists.' });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await usersCollection.insertOne({ username, email, password: hashedPassword });
-
-        res.json({ message: 'User registered successfully.' });
-    } catch (error) {
-        console.error('Error registering user:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
