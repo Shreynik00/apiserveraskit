@@ -23,7 +23,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
   origin: "https://askitindia.github.io",
-  methods: ["GET", "POST"]
+  methods: ["GET", "POST"],
+   credentials: true  
 }));
 
 
@@ -720,4 +721,5 @@ app.post('/add-task', async (req, res) => {
 // ✅ Instead, export app for Vercel
 module.exports = app;
 module.exports.handler = serverless(app);
+
 
