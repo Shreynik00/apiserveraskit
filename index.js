@@ -566,21 +566,46 @@ app.post('/register', async (req, res) => {
 });
 
 // API to log in a user
-app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-    try {
-        const user = await usersCollection.findOne({ username });
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.json({ message: 'Invalid username or password.' });
-        }
+// ✅ API to log in a user
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
 
-        req.session.user = { username: user.username, email: user.email, _id: user._id };
-        res.json({ message: 'Login successful', username: user.username, email: user.email });
-    } catch (error) {
-        console.error('Error logging in user:', error);
-        res.status(500).json({ message: 'Internal server error.' });
+  try {
+    // Check if user exists
+    const user = await usersCollection.findOne({ username });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid username or password." });
     }
+
+    // Validate password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid username or password." });
+    }
+
+    // ✅ Store user session (only if express-session + cookie setup is correct)
+    req.session.user = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+    };
+
+    // ✅ Explicitly set CORS + credentials for Vercel + GitHub Pages frontend
+    res.setHeader("Access-Control-Allow-Origin", "https://askitindia.github.io");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+
+    return res.json({
+      success: true,
+      message: "Login successful",
+      username: user.username,
+      email: user.email,
+    });
+  } catch (error) {
+    console.error("❌ Error logging in user:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
 });
+
 
 // API to fetch user details
 // API to fetch user details by username
@@ -721,5 +746,6 @@ app.post('/add-task', async (req, res) => {
 // ✅ Instead, export app for Vercel
 module.exports = app;
 module.exports.handler = serverless(app);
+
 
 
