@@ -4,7 +4,7 @@
   "description": "A task management app with user registration, login, and task creation",
   "main": "displaydata.js",
   "scripts": {
-    "start": "node displaydata.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "express": "^4.18.2",
