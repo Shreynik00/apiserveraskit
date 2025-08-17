@@ -4,6 +4,7 @@ const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library');
+const serverless = require('serverless-http');   // ✅ important
 const cors = require('cors');
 
 const app = express();
@@ -29,12 +30,16 @@ app.use(cors({
 
 
 // Handle preflight requests
-app.options('*', cors());
+app.options("*", cors());
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(session({
-    secret: 'your-secret-key', // Replace with a secure secret
+    secret: 'your-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true } // Ensure secure cookies if using HTTPS
+    cookie: { secure: false, httpOnly: true }
 }));
 
 // Connect to MongoDB once at the start
@@ -714,7 +719,6 @@ app.post('/add-task', async (req, res) => {
 
 
 
-// Start the server
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+// ✅ Instead, export app for Vercel
+module.exports = app;
+module.exports.handler = serverless(app);
