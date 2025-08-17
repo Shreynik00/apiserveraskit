@@ -22,10 +22,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
-    origin: 'https://askitindia.github.io',  // Allow your GitHub Pages site
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow specific HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
-    credentials: true  // Allow credentials if needed
+  origin: "https://askitindia.github.io",
+  methods: ["GET", "POST"]
 }));
 
 
@@ -722,3 +720,4 @@ app.post('/add-task', async (req, res) => {
 // ✅ Instead, export app for Vercel
 module.exports = app;
 module.exports.handler = serverless(app);
+
