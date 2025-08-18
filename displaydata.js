@@ -4,7 +4,6 @@ const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library');
-const serverless = require('serverless-http');   // ✅ important
 const cors = require('cors');
 
 const app = express();
@@ -22,23 +21,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
-  origin: "https://askitindia.github.io",
-  methods: ["GET", "POST"],
-   credentials: true  
+    origin: 'https://askitindia.github.io',  // Allow your GitHub Pages site
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow specific HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
+    credentials: true  // Allow credentials if needed
 }));
 
 
 // Handle preflight requests
-app.options("*", cors());
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.options('*', cors());
 app.use(session({
-    secret: 'your-secret-key',
+    secret: 'your-secret-key', // Replace with a secure secret
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true }
+    cookie: { secure: false, httpOnly: true } // Ensure secure cookies if using HTTPS
 }));
 
 // Connect to MongoDB once at the start
@@ -566,46 +562,21 @@ app.post('/register', async (req, res) => {
 });
 
 // API to log in a user
-// ✅ API to log in a user
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const user = await usersCollection.findOne({ username });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.json({ message: 'Invalid username or password.' });
+        }
 
-  try {
-    // Check if user exists
-    const user = await usersCollection.findOne({ username });
-    if (!user) {
-      return res.status(401).json({ message: "Invalid username or password." });
+        req.session.user = { username: user.username, email: user.email, _id: user._id };
+        res.json({ message: 'Login successful', username: user.username, email: user.email });
+    } catch (error) {
+        console.error('Error logging in user:', error);
+        res.status(500).json({ message: 'Internal server error.' });
     }
-
-    // Validate password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid username or password." });
-    }
-
-    // ✅ Store user session (only if express-session + cookie setup is correct)
-    req.session.user = {
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-    };
-
-    // ✅ Explicitly set CORS + credentials for Vercel + GitHub Pages frontend
-    res.setHeader("Access-Control-Allow-Origin", "https://askitindia.github.io");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-
-    return res.json({
-      success: true,
-      message: "Login successful",
-      username: user.username,
-      email: user.email,
-    });
-  } catch (error) {
-    console.error("❌ Error logging in user:", error);
-    return res.status(500).json({ message: "Internal server error." });
-  }
 });
-
 
 // API to fetch user details
 // API to fetch user details by username
@@ -743,9 +714,7 @@ app.post('/add-task', async (req, res) => {
 
 
 
-// ✅ Instead, export app for Vercel
-module.exports = app;
-module.exports.handler = serverless(app);
-
-
-
+// Start the server
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
